@@ -1,11 +1,11 @@
 import re
-from . import cleaners
-from .symbols import symbols
+from .  import cleaners
+from . import symbols
 
 
 # Mappings from symbol to numeric ID and vice versa:
-_symbol_to_id = {s: i for i, s in enumerate(symbols)}
-_id_to_symbol = {i: s for i, s in enumerate(symbols)}
+_symbol_to_id = {s: i for i, s in enumerate(symbols.symbols)}
+_id_to_symbol = {i: s for i, s in enumerate(symbols.symbols)}
 
 # Regular expression matching text enclosed in curly braces:
 _curly_re = re.compile(r'(.*?)\{(.+?)\}(.*)')
