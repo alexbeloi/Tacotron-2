@@ -36,5 +36,7 @@ def estimator_fn(features,
         predictions=model.mel_outputs,
         loss=model.loss,
         train_op=model.optimize,
-        eval_metric_ops=None,
+        eval_metric_ops={
+            'my_loss': tf.metrics.mean(model.loss),
+        },
     )

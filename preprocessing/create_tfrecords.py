@@ -3,7 +3,6 @@ import errno
 import argparse
 import functools
 import concurrent.futures as futures
-import functools
 
 import tqdm
 import tensorflow as tf
@@ -37,20 +36,20 @@ def _float_feature(value):
 
 def _int64_featurelist(values):
     return tf.train.FeatureList(feature=[
-                tf.train.Feature(int64_list=tf.train.Int64List(value=v))
+        tf.train.Feature(int64_list=tf.train.Int64List(value=v))
         for v in values
     ])
 
 
 def _float_featurelist(values):
     return tf.train.FeatureList(feature=[
-                tf.train.Feature(float_list=tf.train.FloatList(value=v))
+        tf.train.Feature(float_list=tf.train.FloatList(value=v))
         for v in values
     ])
 
 
 def create_dataset(input_dir, metadata_file, output_dir, hparams='',
-                   max_examples_per_file=128, n_jobs=8):
+                   max_examples_per_file=16, n_jobs=8):
     modified_hp = hp.hparams.parse(hparams)
 
     executor = futures.ProcessPoolExecutor(max_workers=n_jobs)
@@ -59,7 +58,7 @@ def create_dataset(input_dir, metadata_file, output_dir, hparams='',
         for line in f:
             parts = line.strip().split('|')
             wav_path = os.path.join(input_dir, 'wavs',
-                           '{}.wav'.format(parts[0]))
+                                    '{}.wav'.format(parts[0]))
             text = parts[2]
             work_items.append((wav_path, text, modified_hp))
 
@@ -71,7 +70,7 @@ def create_dataset(input_dir, metadata_file, output_dir, hparams='',
     for i, work_batch in enumerate(work_batches):
         output_path = os.path.join(output_dir, 'dataset_%03d.tfrecords' % i)
         _partial = functools.partial(_write_examples, work_batch,
-                                            output_path)
+                                     output_path)
         results.append(executor.submit(_partial))
 
     for r in tqdm.tqdm(futures.as_completed(results),
@@ -93,8 +92,8 @@ def make_example(wav_path, text, hparams):
         # Load the audio as numpy array
         wav = utils.audio.load_wav(wav_path, sr=hparams.sample_rate)
     except FileNotFoundError: #catch missing wav exception
-        print('file {} present in csv metadata is not present in wav folder. skipping!'.format(
-            wav_path))
+        print(('file {} present in csv metadata is not present in wav folder.'
+               ' skipping!'.format(wav_path)))
         return None
 
     #rescale wav
@@ -111,7 +110,8 @@ def make_example(wav_path, text, hparams):
         out = utils.audio.mulaw_quantize(wav, hparams.quantize_channels)
 
         #Trim silences
-        start, end = utils.audio.start_and_end_indices(out, hparams.silence_threshold)
+        start, end = utils.audio.start_and_end_indices(
+            out, hparams.silence_threshold)
         wav = wav[start: end]
         out = out[start: end]
 
@@ -138,14 +138,16 @@ def make_example(wav_path, text, hparams):
         return None
 
     #Compute the linear scale spectrogram from the wav
-    linear_spectrogram = utils.audio.linearspectrogram(wav, hparams).astype(np.float32)
+    linear_spectrogram = utils.audio.linearspectrogram(wav, hparams).astype(
+        np.float32)
     linear_frames = linear_spectrogram.shape[1]
 
     #sanity check
     assert linear_frames == mel_frames
 
     #Ensure time resolution adjustement between audio and mel-spectrogram
-    l, r = utils.audio.pad_lr(wav, hparams.fft_size, utils.audio.get_hop_size(hparams))
+    l, r = utils.audio.pad_lr(wav, hparams.fft_size,
+                              utils.audio.get_hop_size(hparams))
 
     #Zero pad for quantized signal
     out = np.pad(out, (l, r), mode='constant', constant_values=constant_values)

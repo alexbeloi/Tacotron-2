@@ -200,7 +200,6 @@ class Tacotron():
                 after = MaskedMSE(self.mel_targets, self.mel_outputs, self.targets_lengths,
                     hparams=self._hparams)
                 #Compute <stop_token> loss (for learning dynamic generation stop)
-                print(self.stop_token_targets, self.stop_token_prediction, self.targets_lengths)
                 stop_token_loss = MaskedSigmoidCrossEntropy(self.stop_token_targets,
                     self.stop_token_prediction, self.targets_lengths, hparams=self._hparams)
             else:
