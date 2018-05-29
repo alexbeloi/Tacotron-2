@@ -1,5 +1,5 @@
 import tensorflow as tf
-
+import tacotron.hooks as hooks
 import tacotron.models.tacotron as tacotron
 
 
@@ -22,15 +22,12 @@ def train_summaries(model, hparams):
 
 
 def test_summaries(model, hparams):
-	values = [
-	tf.Summary.Value(tag='eval_model/eval_stats/eval_before_loss', simple_value=model.before_loss),
-	tf.Summary.Value(tag='eval_model/eval_stats/eval_after_loss', simple_value=model.after_loss),
-	tf.Summary.Value(tag='eval_model/eval_stats/stop_token_loss', simple_value=model.stop_token_loss),
-	tf.Summary.Value(tag='eval_model/eval_stats/eval_loss', simple_value=model.loss),
-	]
+	tf.summary.scalar('eval_model/eval_stats/eval_before_loss', model.before_loss),
+	tf.summary.scalar('eval_model/eval_stats/eval_after_loss', model.after_loss),
+	tf.summary.scalar('eval_model/eval_stats/stop_token_loss', model.stop_token_loss),
+	tf.summary.scalar('eval_model/eval_stats/eval_loss', model.loss),
 	if model.linear_loss is not None:
-		values.append(tf.Summary.Value(tag='model/eval_stats/eval_linear_loss', simple_value=model.linear_loss))
-	test_summary = tf.Summary(value=values)
+		tf.summary.scalar('model/eval_stats/eval_linear_loss', model.linear_loss)
 
 
 
@@ -61,13 +58,14 @@ def estimator_fn(features,
                      )
     model.add_loss()
     model.add_optimizer(tf.train.get_global_step())
+
     if is_training:
         train_summaries(model, hparams)
     elif is_evaluating:
         test_summaries(model, hparams)
 
     summary_hook = tf.train.SummarySaverHook(
-        save_steps=10,
+        save_steps=250,
         output_dir=hparams.job_dir,
         summary_op=tf.summary.merge_all())
 
@@ -79,5 +77,5 @@ def estimator_fn(features,
         eval_metric_ops={
             'my_loss': tf.metrics.mean(model.loss),
         },
-        training_hooks=[summary_hook],
+        training_hooks=[summary_hook, hooks.TimeHook()],
     )

@@ -40,7 +40,7 @@ def parse_example(example):
 def input_fn(filenames,
              num_epochs=None,
              shuffle=True,
-             batch_size=32):
+             batch_size=hp.hparams.tacotron_batch_size):
         dataset = tf.data.TFRecordDataset(filenames)
         dataset = dataset.map(parse_example)
         if shuffle:

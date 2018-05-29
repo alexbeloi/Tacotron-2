@@ -5,6 +5,7 @@ import numpy as np
 # Default hyperparameters
 hparams = tf.contrib.training.HParams(
     export_format='JSON',
+    train_files=[''],
     job_dir='job_dir',
     batch_size=32,
 	# Comma-separated list of cleaners to run on text prior to training and eval. For non-English
@@ -55,7 +56,7 @@ hparams = tf.contrib.training.HParams(
 
 	#Tacotron
     train_steps = 320000,
-    eval_steps = 128,
+    eval_steps = 16,
 	outputs_per_step = 1, #number of frames to generate at each decoding step (speeds up computation and allows for higher batch size)
 	stop_at_any = True, #Determines whether the decoder should stop when predicting <stop> to any frame or to all of them
 
@@ -126,7 +127,7 @@ hparams = tf.contrib.training.HParams(
 	tacotron_random_seed = 5339, #Determines initial graph and operations (i.e: model) random state for reproducibility
 	tacotron_swap_with_cpu = False, #Whether to use cpu as support to gpu for decoder computation (Not recommended: may cause major slowdowns! Only use when critical!)
 
-	tacotron_batch_size = 32, #number of training samples on each training steps
+	tacotron_batch_size = 48, #number of training samples on each training steps
 	tacotron_reg_weight = 1e-6, #regularization weight (for l2 regularization)
 	tacotron_scale_regularization = False, #Whether to rescale regularization weight to adapt for outputs range (used when reg_weight is high and biasing the model)
 
