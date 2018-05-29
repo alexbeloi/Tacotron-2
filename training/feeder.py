@@ -1,41 +1,40 @@
 import tensorflow as tf
-
-_batches_per_group = 32
-
-LABEL_COLUMN = 'mel_spectrogram'
-INPUT_COLUMNS = ['text']
-
-padded_shapes = {
-    'mel_spectrogram': [None],
-    'linear_spectrogram': [None],
-    'audio': [None],
-    'text': [None],
-    'text_length': [1],
-    'time_steps': [1],
-    'mel_frames': [1],
-    'linear_frames': [1],
-}
-
-padding_values = {
-    'mel_spectrogram': 0,
-    'linear_spectrogram': 0,
-    'audio': 0,
-    'text': 0,
-}
+import training.hparams as hp
+import training.feature_specs as specs
 
 
 def parse_example(example):
-    features = {}
-    features['mel_spectrogram'] = tf.FixedLenFeature([], dtype=tf.float32)
-    features['linear_spectrogram'] = tf.FixedLenFeature([], dtype=tf.float32)
-    features['audio'] = tf.FixedLenFeature([], dtype=tf.float32)
-    features['text'] = tf.FixedLenFeature([], dtype=tf.int64)
-    features['text_length'] = tf.FixedLenFeature([], dtype=tf.int64)
-    features['time_steps'] = tf.FixedLenFeature([], dtype=tf.int64)
-    features['mel_frames'] = tf.FixedLenFeature([], dtype=tf.int64)
-    features['linear_frames'] = tf.FixedLenFeature([], dtype=tf.int64)
+    sequence_features = {
+        'mel_spectrogram': tf.FixedLenSequenceFeature(
+            [hp.hparams.num_mels], dtype=tf.float32),
+        'linear_spectrogram': tf.FixedLenSequenceFeature(
+            [hp.hparams.num_freq], dtype=tf.float32),
+        'audio': tf.FixedLenSequenceFeature(
+            [], dtype=tf.float32),
+        'text': tf.FixedLenSequenceFeature(
+            [], dtype=tf.int64),
+        'stop_token': tf.FixedLenSequenceFeature(
+            [], dtype=tf.float32),
+    }
+    context_features = {
+        'text_length': tf.FixedLenFeature([], dtype=tf.int64),
+        'time_steps': tf.FixedLenFeature([], dtype=tf.int64),
+        'mel_frames': tf.FixedLenFeature([], dtype=tf.int64),
+        'linear_frames': tf.FixedLenFeature([], dtype=tf.int64),
+    }
 
-    return tf.parse_single_example(example, features=features)
+    con_feats_parsed, seq_feats_parsed = tf.parse_single_sequence_example(
+        example,
+        context_features=context_features,
+        sequence_features=sequence_features)
+
+    for k, v in con_feats_parsed.items():
+        print(k, v)
+    for k, v in seq_feats_parsed.items():
+        print(k, v)
+
+    return {'context_features': con_feats_parsed,
+            'sequence_features': seq_feats_parsed}
 
 
 def input_fn(filenames,
@@ -46,8 +45,14 @@ def input_fn(filenames,
         dataset = dataset.map(parse_example)
         if shuffle:
             dataset = dataset.shuffle(buffer_size=batch_size * 10)
-        dataset = dataset.repeat(num_epochs)
-        dataset = dataset.padded_batch(batch_size)
+        if num_epochs:
+            dataset = dataset.repeat(num_epochs)
+        batch_fn = tf.contrib.data.padded_batch_and_drop_remainder(
+            batch_size=batch_size,
+            padded_shapes=specs.PADDED_SHAPES,
+            padding_values=specs.PADDING_VALUES,
+        )
+        dataset = dataset.apply(batch_fn)
 
         return dataset
 
@@ -69,7 +74,7 @@ def example_serving_input_fn():
 def json_serving_input_fn():
     """Build the serving inputs."""
     inputs = {}
-    for feat in INPUT_COLUMNS:
+    for feat in specs.INPUT_COLUMNS:
         inputs[feat.name] = tf.placeholder(shape=[None], dtype=feat.dtype)
 
     return tf.estimator.export.ServingInputReceiver(inputs, inputs)
