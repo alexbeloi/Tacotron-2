@@ -32,7 +32,7 @@ def run_experiment(train_files, eval_files, hparams):
 
     run_config = tf.estimator.RunConfig(
         model_dir=hparams.job_dir,
-        save_summary_steps=1,
+        save_summary_steps=100,
     )
     run_config = run_config.replace(model_dir=hparams.job_dir)
 
@@ -66,4 +66,5 @@ def parse_args():
 
 if __name__ == '__main__':
     args = parse_args()
+    hparams = hp.hparams.override_from_dict(args.__dict__)
     run_experiment(args.train_files, args.train_files, hp.hparams)

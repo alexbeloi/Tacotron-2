@@ -3,6 +3,37 @@ import tensorflow as tf
 import tacotron.models.tacotron as tacotron
 
 
+def train_summaries(model, hparams):
+    tf.summary.histogram('mel_outputs', model.mel_outputs)
+    tf.summary.histogram('mel_targets', model.mel_targets)
+    tf.summary.scalar('before_loss', model.before_loss)
+    tf.summary.scalar('after_loss', model.after_loss)
+    if hparams.predict_linear:
+        tf.summary.scalar('linear_loss', model.linear_loss)
+    tf.summary.scalar('regularization_loss', model.regularization_loss)
+    tf.summary.scalar('stop_token_loss', model.stop_token_loss)
+    tf.summary.scalar('loss', model.loss)
+    tf.summary.scalar('learning_rate', model.learning_rate) #Control learning rate decay speed
+    if hparams.tacotron_teacher_forcing_mode == 'scheduled':
+        tf.summary.scalar('teacher_forcing_ratio', model.ratio) #Control teacher forcing ratio decay when mode = 'scheduled'
+    gradient_norms = [tf.norm(grad) for grad in model.gradients]
+    tf.summary.histogram('gradient_norm', gradient_norms)
+    tf.summary.scalar('max_gradient_norm', tf.reduce_max(gradient_norms)) #visualize gradients (in case of explosion)
+
+
+def test_summaries(model, hparams):
+	values = [
+	tf.Summary.Value(tag='eval_model/eval_stats/eval_before_loss', simple_value=model.before_loss),
+	tf.Summary.Value(tag='eval_model/eval_stats/eval_after_loss', simple_value=model.after_loss),
+	tf.Summary.Value(tag='eval_model/eval_stats/stop_token_loss', simple_value=model.stop_token_loss),
+	tf.Summary.Value(tag='eval_model/eval_stats/eval_loss', simple_value=model.loss),
+	]
+	if model.linear_loss is not None:
+		values.append(tf.Summary.Value(tag='model/eval_stats/eval_linear_loss', simple_value=model.linear_loss))
+	test_summary = tf.Summary(value=values)
+
+
+
 def estimator_fn(features,
                  labels,
                  mode=None,
@@ -30,6 +61,15 @@ def estimator_fn(features,
                      )
     model.add_loss()
     model.add_optimizer(tf.train.get_global_step())
+    if is_training:
+        train_summaries(model, hparams)
+    elif is_evaluating:
+        test_summaries(model, hparams)
+
+    summary_hook = tf.train.SummarySaverHook(
+        save_steps=10,
+        output_dir=hparams.job_dir,
+        summary_op=tf.summary.merge_all())
 
     return tf.estimator.EstimatorSpec(
         mode=mode,
@@ -39,4 +79,5 @@ def estimator_fn(features,
         eval_metric_ops={
             'my_loss': tf.metrics.mean(model.loss),
         },
+        training_hooks=[summary_hook],
     )
