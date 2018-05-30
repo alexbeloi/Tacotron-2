@@ -1,16 +1,26 @@
+import os
+import json
+import multiprocessing as mp
 import tensorflow as tf
 import training.hparams as hp
 import training.feature_specs as specs
+
+
+tf_config = os.environ.get('TF_CONFIG','')
+try:
+    tf_config_json = json.loads(tf_config)
+except json.decoder.JSONDecodeError:
+    tf_config_json = {}
 
 
 def parse_example(example):
     sequence_features = {
         'mel_spectrogram': tf.FixedLenSequenceFeature(
             [hp.hparams.num_mels], dtype=tf.float32),
-        'linear_spectrogram': tf.FixedLenSequenceFeature(
-            [hp.hparams.num_freq], dtype=tf.float32),
-        'audio': tf.FixedLenSequenceFeature(
-            [], dtype=tf.float32),
+        # 'linear_spectrogram': tf.FixedLenSequenceFeature(
+        #    [hp.hparams.num_freq], dtype=tf.float32),
+        # 'audio': tf.FixedLenSequenceFeature(
+        #    [], dtype=tf.float32),
         'text': tf.FixedLenSequenceFeature(
             [], dtype=tf.int64),
         'stop_token': tf.FixedLenSequenceFeature(
@@ -28,32 +38,36 @@ def parse_example(example):
         context_features=context_features,
         sequence_features=sequence_features)
 
-    for k, v in con_feats_parsed.items():
-        print(k, v)
-    for k, v in seq_feats_parsed.items():
-        print(k, v)
-
     return {'context_features': con_feats_parsed,
             'sequence_features': seq_feats_parsed}
 
 
-def input_fn(filenames,
+def input_fn(glob,
              num_epochs=None,
              shuffle=True,
              batch_size=hp.hparams.tacotron_batch_size):
-        dataset = tf.data.TFRecordDataset(filenames)
-        dataset = dataset.map(parse_example)
-        if shuffle:
-            dataset = dataset.shuffle(buffer_size=batch_size * 10)
+        files = tf.matching_files(glob)
+        files = tf.data.Dataset.list_files(files)
+        dataset = files.apply(tf.contrib.data.parallel_interleave(
+            tf.data.TFRecordDataset,
+            cycle_length=mp.cpu_count(),
+            block_length=1))
+        dataset = dataset.shard(
+            int(tf_config_json.get('job', {}).get('worker_count', 1)),
+            int(tf_config_json.get('task', {}).get('index', 0)))
+
         if num_epochs:
             dataset = dataset.repeat(num_epochs)
+        if shuffle:
+            dataset = dataset.shuffle(buffer_size=batch_size * 10)
+        dataset = dataset.map(parse_example,
+                              num_parallel_calls=mp.cpu_count())
         batch_fn = tf.contrib.data.padded_batch_and_drop_remainder(
             batch_size=batch_size,
             padded_shapes=specs.PADDED_SHAPES,
             padding_values=specs.PADDING_VALUES,
         )
         dataset = dataset.apply(batch_fn)
-
         return dataset
 
 

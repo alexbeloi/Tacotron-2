@@ -11,8 +11,8 @@ DEFAULT_VALUES = {
     },
     'sequence_features': {
         'mel_spectrogram': 0.,
-        'linear_spectrogram': 0.,
-        'audio': 0.,
+        # 'linear_spectrogram': 0.,
+        # 'audio': 0.,
         'text': np.int64(0),
         'stop_token': 0.,
     },
@@ -35,8 +35,8 @@ PADDED_SHAPES = {
     },
     'sequence_features': {
         'mel_spectrogram': [None, hp.hparams.num_mels],
-        'linear_spectrogram': [None, hp.hparams.num_freq],
-        'audio': [None],
+        # 'linear_spectrogram': [None, hp.hparams.num_freq],
+        # 'audio': [None],
         'text': [None],
         'stop_token': [None],
     },
@@ -51,8 +51,8 @@ PADDING_VALUES = {
     },
     'sequence_features': {
         'mel_spectrogram': 0.,
-        'linear_spectrogram': 0.,
-        'audio': 0.,
+        # 'linear_spectrogram': 0.,
+        # 'audio': 0.,
         'text': np.int64(0),
         'stop_token': 1.,
     },

@@ -1,6 +1,6 @@
 import tensorflow as tf
 from preprocessing.utils.symbols import symbols
-from infolog import log
+from tacotron.utils.infolog import log
 from tacotron.models.helpers import TacoTrainingHelper, TacoTestHelper
 from tacotron.models.modules import *
 from tensorflow.contrib.seq2seq import dynamic_decode
@@ -264,7 +264,8 @@ class Tacotron():
             self.gradients = gradients
             #Just for causion
             #https://github.com/Rayhane-mamah/Tacotron-2/issues/11
-            clipped_gradients, _ = tf.clip_by_global_norm(gradients, 0.5)
+            #clipped_gradients, _ = tf.clip_by_global_norm(gradients, 0.5)
+            clipped_gradients = gradients
 
             # Add dependency on UPDATE_OPS; otherwise batchnorm won't work correctly. See:
             # https://github.com/tensorflow/tensorflow/issues/1122

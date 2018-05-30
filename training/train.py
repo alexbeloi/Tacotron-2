@@ -32,7 +32,7 @@ def run_experiment(train_files, eval_files, hparams):
 
     run_config = tf.estimator.RunConfig(
         model_dir=hparams.job_dir,
-        save_summary_steps=10,
+        save_summary_steps=100,
     )
     run_config = run_config.replace(model_dir=hparams.job_dir)
 
@@ -42,7 +42,6 @@ def run_experiment(train_files, eval_files, hparams):
     model = tf.estimator.Estimator(model_fn=estimator.estimator_fn,
                                    params=hparams,
                                    config=run_config)
-
     tf.estimator.train_and_evaluate(model, train_spec, eval_spec)
 
 
@@ -52,14 +51,13 @@ def parse_args():
     parser.add_argument(
         '--train-files',
         type=str,
-        help='GCS or local paths to training data',
+        help='GCS or local path glob to training data',
         nargs='+',
         required=True
     )
     parser.add_argument(
-        '--val-files',
-        type=str,
-        help='GCS or local paths to validation data',
+        '--eval-files', type=str,
+        help='GCS or local path glob to validation data',
         nargs='+',
         required=True
     )
@@ -76,4 +74,4 @@ def parse_args():
 if __name__ == '__main__':
     args = parse_args()
     hparams = hp.hparams.override_from_dict({'job_dir': args.job_dir})
-    run_experiment(args.train_files, args.val_files, hparams)
+    run_experiment(args.train_files, args.eval_files, hparams)

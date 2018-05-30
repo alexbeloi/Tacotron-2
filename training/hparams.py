@@ -7,7 +7,6 @@ hparams = tf.contrib.training.HParams(
     export_format='JSON',
     train_files=[''],
     job_dir='job_dir',
-    batch_size=32,
 	# Comma-separated list of cleaners to run on text prior to training and eval. For non-English
 	# text, you may want to use "basic_cleaners" or "transliteration_cleaners".
 	cleaners='english_cleaners',
@@ -127,12 +126,12 @@ hparams = tf.contrib.training.HParams(
 	tacotron_random_seed = 5339, #Determines initial graph and operations (i.e: model) random state for reproducibility
 	tacotron_swap_with_cpu = False, #Whether to use cpu as support to gpu for decoder computation (Not recommended: may cause major slowdowns! Only use when critical!)
 
-	tacotron_batch_size = 48, #number of training samples on each training steps
+	tacotron_batch_size = 16, #number of training samples on each training steps
 	tacotron_reg_weight = 1e-6, #regularization weight (for l2 regularization)
 	tacotron_scale_regularization = False, #Whether to rescale regularization weight to adapt for outputs range (used when reg_weight is high and biasing the model)
 
 	tacotron_test_size = None, #% of data to keep as test data, if None, tacotron_test_batches must be not None
-	tacotron_test_batches = 48, #number of test batches (For Ljspeech: 10% ~= 41 batches of 32 samples)
+	tacotron_test_batches = 16, #number of test batches (For Ljspeech: 10% ~= 41 batches of 32 samples)
 	tacotron_data_random_state=1234, #random state for train test split repeatability
 
 	tacotron_decay_learning_rate = True, #boolean, determines if the learning rate will follow an exponential decay
@@ -170,7 +169,7 @@ hparams = tf.contrib.training.HParams(
 	wavenet_random_seed = 5339, # S=5, E=3, D=9 :)
 	wavenet_swap_with_cpu = False, #Whether to use cpu as support to gpu for decoder computation (Not recommended: may cause major slowdowns! Only use when critical!)
 
-	wavenet_batch_size = 4, #batch size used to train wavenet.
+	wavenet_batch_size = 16, #batch size used to train wavenet.
 	wavenet_test_size = 0.0441, #% of data to keep as test data, if None, wavenet_test_batches must be not None
 	wavenet_test_batches = None, #number of test batches.
 	wavenet_data_random_state = 1234, #random state for train test split repeatability
