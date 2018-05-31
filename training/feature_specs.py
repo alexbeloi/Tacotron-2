@@ -5,9 +5,9 @@ import training.hparams as hp
 DEFAULT_VALUES = {
     'context_features': {
         'text_length': np.int64(0),
-        'time_steps': np.int64(0),
+        # 'time_steps': np.int64(0),
         'mel_frames': np.int64(0),
-        'linear_frames': np.int64(0),
+        # 'linear_frames': np.int64(0),
     },
     'sequence_features': {
         'mel_spectrogram': 0.,
@@ -29,9 +29,9 @@ SPARES_FEATURES = [
 PADDED_SHAPES = {
     'context_features': {
         'text_length': [],
-        'time_steps': [],
+        # 'time_steps': [],
         'mel_frames': [],
-        'linear_frames': [],
+        # 'linear_frames': [],
     },
     'sequence_features': {
         'mel_spectrogram': [None, hp.hparams.num_mels],
@@ -45,9 +45,9 @@ PADDED_SHAPES = {
 PADDING_VALUES = {
     'context_features': {
         'text_length': np.int64(0),
-        'time_steps': np.int64(0),
+        # 'time_steps': np.int64(0),
         'mel_frames': np.int64(0),
-        'linear_frames': np.int64(0),
+        # 'linear_frames': np.int64(0),
     },
     'sequence_features': {
         'mel_spectrogram': 0.,

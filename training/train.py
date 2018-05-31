@@ -1,6 +1,8 @@
 import argparse
 import tensorflow as tf
 
+tf.logging.set_verbosity(tf.logging.INFO)
+
 import training.feeder as feeder
 import training.hparams as hp
 import tacotron.models.estimator as estimator
@@ -8,12 +10,10 @@ import tacotron.models.estimator as estimator
 
 def run_experiment(train_files, eval_files, hparams):
     train_dataset = lambda: feeder.input_fn(train_files,
-                                    #hparams.num_epochs,
-                                    shuffle=False,
+                                    shuffle=True,
                                     )
 
     eval_dataset = lambda:  feeder.input_fn(eval_files,
-                                   #hparams.num_epochs,
                                    shuffle=False,
                                    )
 
@@ -32,9 +32,9 @@ def run_experiment(train_files, eval_files, hparams):
 
     run_config = tf.estimator.RunConfig(
         model_dir=hparams.job_dir,
-        save_summary_steps=100,
+        save_summary_steps=1,
+        log_step_count_steps=1,
     )
-    run_config = run_config.replace(model_dir=hparams.job_dir)
 
     print('model dir {}'.format(run_config.model_dir))
     print(run_config)

@@ -260,12 +260,14 @@ class Tacotron():
 
             optimizer = tf.train.AdamOptimizer(self.learning_rate, hp.tacotron_adam_beta1,
                 hp.tacotron_adam_beta2, hp.tacotron_adam_epsilon)
+            # self.optimize = optimizer.minimize(self.loss,
+            #                                    global_step=global_step)
             gradients, variables = zip(*optimizer.compute_gradients(self.loss))
             self.gradients = gradients
             #Just for causion
             #https://github.com/Rayhane-mamah/Tacotron-2/issues/11
-            #clipped_gradients, _ = tf.clip_by_global_norm(gradients, 0.5)
-            clipped_gradients = gradients
+            clipped_gradients, _ = tf.clip_by_global_norm(gradients, 0.5)
+            self.clipped_gradients = clipped_gradients
 
             # Add dependency on UPDATE_OPS; otherwise batchnorm won't work correctly. See:
             # https://github.com/tensorflow/tensorflow/issues/1122

@@ -28,9 +28,9 @@ def parse_example(example):
     }
     context_features = {
         'text_length': tf.FixedLenFeature([], dtype=tf.int64),
-        'time_steps': tf.FixedLenFeature([], dtype=tf.int64),
+        # 'time_steps': tf.FixedLenFeature([], dtype=tf.int64),
         'mel_frames': tf.FixedLenFeature([], dtype=tf.int64),
-        'linear_frames': tf.FixedLenFeature([], dtype=tf.int64),
+        # 'linear_frames': tf.FixedLenFeature([], dtype=tf.int64),
     }
 
     con_feats_parsed, seq_feats_parsed = tf.parse_single_sequence_example(
@@ -47,19 +47,17 @@ def input_fn(glob,
              shuffle=True,
              batch_size=hp.hparams.tacotron_batch_size):
         files = tf.matching_files(glob)
-        files = tf.data.Dataset.list_files(files)
-        dataset = files.apply(tf.contrib.data.parallel_interleave(
-            tf.data.TFRecordDataset,
-            cycle_length=mp.cpu_count(),
-            block_length=1))
+        dataset = tf.data.TFRecordDataset(files,
+                                          num_parallel_reads=mp.cpu_count(),
+                                          )
         dataset = dataset.shard(
             int(tf_config_json.get('job', {}).get('worker_count', 1)),
             int(tf_config_json.get('task', {}).get('index', 0)))
 
         if num_epochs:
             dataset = dataset.repeat(num_epochs)
-        if shuffle:
-            dataset = dataset.shuffle(buffer_size=batch_size * 10)
+        # if shuffle:
+        #     dataset = dataset.shuffle(buffer_size=batch_size * 10)
         dataset = dataset.map(parse_example,
                               num_parallel_calls=mp.cpu_count())
         batch_fn = tf.contrib.data.padded_batch_and_drop_remainder(

@@ -49,32 +49,27 @@ def estimator_fn(features,
     context_features = features['context_features']
     sequence_features = features['sequence_features']
 
+    global_step = tf.train.get_or_create_global_step()
     model.initialize(sequence_features['text'],
                      features['context_features']['text_length'],
                      mel_targets=sequence_features['mel_spectrogram'],
                      stop_token_targets=sequence_features['stop_token'],
                      targets_lengths=context_features['mel_frames'],
-                     global_step=tf.train.get_global_step(),
+                     global_step=global_step,
                      is_training=is_training,
                      is_evaluating=is_evaluating,
                      )
     model.add_loss()
-    model.add_optimizer(tf.train.get_global_step())
+    model.add_optimizer(global_step)
 
     if is_training:
         train_summaries(model, hparams)
     elif is_evaluating:
         test_summaries(model, hparams)
 
-    summary_hook = tf.train.SummarySaverHook(
-        save_steps=250,
-        output_dir=hparams.job_dir,
-        summary_op=tf.summary.merge_all())
-
     return tf.estimator.EstimatorSpec(
         mode=mode,
         predictions=model.mel_outputs,
         loss=model.loss,
         train_op=model.optimize,
-        training_hooks=[summary_hook, hooks.TimeHook()],
     )

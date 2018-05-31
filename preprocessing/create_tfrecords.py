@@ -49,7 +49,7 @@ def _float_featurelist(values):
 
 
 def create_dataset(input_dir, metadata_file, output_dir, hparams='',
-                   max_examples_per_file=16, n_jobs=8):
+                   examples_per_file=0, n_jobs=8):
     modified_hp = hp.hparams.parse(hparams)
 
     executor = futures.ProcessPoolExecutor(max_workers=n_jobs)
@@ -62,8 +62,11 @@ def create_dataset(input_dir, metadata_file, output_dir, hparams='',
             text = parts[2]
             work_items.append((wav_path, text, modified_hp))
 
-    work_batches = [work_items[i:i + max_examples_per_file] for i in
-                    range(0, len(work_items), max_examples_per_file)]
+    if examples_per_file == 0:
+        work_batches = [work_items]
+    else:
+        work_batches = [work_items[i:i + examples_per_file] for i in
+                    range(0, len(work_items), examples_per_file)]
 
     mkdir_p(output_dir)
     results = []
@@ -167,14 +170,14 @@ def make_example(wav_path, text, hparams):
 
     context_features = {
         'text_length': _int64_feature([len(text_clean)]),
-        'time_steps': _int64_feature([time_steps]),
+        # 'time_steps': _int64_feature([time_steps]),
         'mel_frames': _int64_feature([mel_frames]),
-        'linear_frames': _int64_feature([linear_frames]),
+        # 'linear_frames': _int64_feature([linear_frames]),
     }
     sequence_features = {
         'mel_spectrogram': _float_featurelist(mel_spectrogram.T),
-        'linear_spectrogram': _float_featurelist(linear_spectrogram.T),
-        'audio': _float_featurelist(out.reshape((-1, 1))),
+        # 'linear_spectrogram': _float_featurelist(linear_spectrogram.T),
+        # 'audio': _float_featurelist(out.reshape((-1, 1))),
         'text': _int64_featurelist(text_clean.reshape((-1, 1))),
         'stop_token': _float_featurelist(
             np.zeros((mel_spectrogram.shape[1], 1), dtype=np.float32)),
@@ -197,6 +200,8 @@ def parse_args():
                         help='Path to write tfrecords files')
     parser.add_argument('--hparams', type=str, default='',
                         help='override string for hparams')
+    parser.add_argument('--examples-per-file', type=int, default=0,
+                        help='number of examples to save in each tfrecords')
     return parser.parse_args()
 
 
@@ -205,4 +210,5 @@ if __name__ == '__main__':
     create_dataset(args.input_dir,
                    args.metadata_file,
                    args.output_dir,
-                   args.hparams)
+                   args.hparams,
+                   examples_per_file=args.examples_per_file)

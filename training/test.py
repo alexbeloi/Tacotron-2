@@ -5,6 +5,7 @@ import training.feeder as feeder
 import training.hparams as hparams
 import tacotron.models.estimator as estimator
 
+tf.logging.set_verbosity(tf.logging.INFO)
 
 import datetime
 
@@ -42,9 +43,9 @@ def parse_args():
         required=True
     )
 
-    return parser.parse_args()
+    return parser.parse_known_args()
 
 
 if __name__ == '__main__':
-    args = parse_args()
+    args, _ = parse_args()
     run_experiment(args.train_files, hparams.hparams)
