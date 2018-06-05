@@ -81,7 +81,7 @@ hparams = tf.contrib.training.HParams(
 	postnet_kernel_size = (5, ), #size of postnet convolution filters for each layer
 	postnet_channels = 512, #number of postnet convolution filters for each layer
 
-	mask_encoder = True, #whether to mask encoder padding while computing attention
+	mask_encoder = False, #whether to mask encoder padding while computing attention
 	mask_decoder = True, #Whether to use loss mask for padded sequences (if False, <stop_token> loss function will not be weighted, else recommended pos_weight = 20)
 
 	cross_entropy_pos_weight = 20, #Use class weights to reduce the stop token classes imbalance (by adding more penalty on False Negatives (FN)) (1 = disabled)
