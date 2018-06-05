@@ -39,10 +39,10 @@ def run_experiment(train_files, eval_files, hparams):
     print('model dir {}'.format(run_config.model_dir))
     print(run_config)
 
-    model = tf.estimator.Estimator(model_fn=estimator.estimator_fn,
-                                   params=hparams,
-                                   config=run_config)
-    tf.estimator.train_and_evaluate(model, train_spec, eval_spec)
+    estimator = tf.estimator.Estimator(model_fn=estimator.estimator_fn,
+                                       params=hparams,
+                                       config=run_config)
+    tf.estimator.train_and_evaluate(estimator, train_spec, eval_spec)
 
 
 def parse_args():

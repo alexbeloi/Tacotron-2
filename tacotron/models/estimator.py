@@ -21,17 +21,18 @@ def train_summaries(model, hparams):
     # tf.summary.scalar('max_gradient_norm', tf.reduce_max(gradient_norms))
 
 
-def test_summaries(model, hparams):
+def eval_summaries(model, hparams):
     tf.summary.scalar('eval_model/eval_stats/eval_before_loss',
-                      model.before_loss),
+                      model.before_loss)
     tf.summary.scalar('eval_model/eval_stats/eval_after_loss',
-                      model.after_loss),
+                      model.after_loss)
     tf.summary.scalar('eval_model/eval_stats/stop_token_loss',
-                      model.stop_token_loss),
-    tf.summary.scalar('eval_model/eval_stats/eval_loss', model.loss),
+                      model.stop_token_loss)
+    tf.summary.scalar('eval_model/eval_stats/eval_loss', model.loss)
     if model.linear_loss is not None:
         tf.summary.scalar('model/eval_stats/eval_linear_loss',
                           model.linear_loss)
+    tf.summary.image('alignment', model.alignment, family='Images')
 
 
 def estimator_fn(features,
@@ -63,13 +64,24 @@ def estimator_fn(features,
     model.add_optimizer(global_step)
 
     if is_training:
+        print('Training evaluation summaries to graph')
         train_summaries(model, hparams)
     elif is_evaluating:
+        print('Adding evaluation summaries to graph')
         test_summaries(model, hparams)
+
+    plots_hook = tf.train.SummarySaverHook(
+        save_step=1,
+        output_dir=params.job_dir,
+        summary_op=tf.summary.merge_all())
+
+    evaluation_hooks = [plot_hook]
+
 
     return tf.estimator.EstimatorSpec(
         mode=mode,
         predictions=model.mel_outputs,
         loss=model.loss,
         train_op=model.optimize,
+        evaluation_hooks=evaluation_hooks,
     )
