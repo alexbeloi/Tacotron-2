@@ -70,12 +70,12 @@ def estimator_fn(features,
         print('Adding evaluation summaries to graph')
         test_summaries(model, hparams)
 
-    plots_hook = tf.train.SummarySaverHook(
+    eval_summary_hook = tf.train.SummarySaverHook(
         save_step=1,
         output_dir=params.job_dir,
         summary_op=tf.summary.merge_all())
 
-    evaluation_hooks = [plot_hook]
+    evaluation_hooks = [eval_summary_hook]
 
 
     return tf.estimator.EstimatorSpec(
