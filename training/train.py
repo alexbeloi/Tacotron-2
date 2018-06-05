@@ -1,33 +1,34 @@
 import argparse
 import tensorflow as tf
-
-tf.logging.set_verbosity(tf.logging.INFO)
-
 import training.feeder as feeder
 import training.hparams as hp
 import tacotron.models.estimator as estimator
 
+tf.logging.set_verbosity(tf.logging.INFO)
+
 
 def run_experiment(train_files, eval_files, hparams):
-    train_dataset = lambda: feeder.input_fn(train_files,
-                                    shuffle=True,
-                                    )
+    train_dataset = lambda: feeder.input_fn(train_files,  #pylama: ignore=E731
+                                            shuffle=True,
+                                            )
 
     eval_dataset = lambda:  feeder.input_fn(eval_files,
-                                   shuffle=False,
-                                   )
+                                            shuffle=False,
+                                            )
 
     train_spec = tf.estimator.TrainSpec(train_dataset,
                                         max_steps=hparams.train_steps
                                         )
 
-    exporter = tf.estimator.FinalExporter('tacotron',
-            feeder.SERVING_FUNCTIONS[hparams.export_format])
+    exporter = tf.estimator.FinalExporter(
+        'tacotron',
+        feeder.SERVING_FUNCTIONS[hparams.export_format])
 
     eval_spec = tf.estimator.EvalSpec(eval_dataset,
                                       steps=hparams.eval_steps,
                                       exporters=[exporter],
                                       name='tacotron-eval',
+                                      throttle_secs=hparams.eval_throttle_secs,
                                       )
 
     run_config = tf.estimator.RunConfig(
@@ -40,8 +41,8 @@ def run_experiment(train_files, eval_files, hparams):
     print(run_config)
 
     _estimator = tf.estimator.Estimator(model_fn=estimator.estimator_fn,
-                                       params=hparams,
-                                       config=run_config)
+                                        params=hparams,
+                                        config=run_config)
     tf.estimator.train_and_evaluate(_estimator, train_spec, eval_spec)
 
 

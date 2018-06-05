@@ -1,5 +1,4 @@
 import tensorflow as tf
-import tacotron.hooks as hooks
 import tacotron.models.tacotron as tacotron
 
 
@@ -32,7 +31,17 @@ def eval_summaries(model, hparams):
     if model.linear_loss is not None:
         tf.summary.scalar('model/eval_stats/eval_linear_loss',
                           model.linear_loss)
-    tf.summary.image('alignment', model.alignment, family='Images')
+    alignments = model.alignments
+    images = []
+    for i in hparams.tacotron_batch_size:
+        image = alignments[i, :, :model.targets_lengths[i]]
+        image_resized = tf.image.resize_image(image, [256, 256])
+        images.append(image_resized)
+    images_stacked = tf.stack(images)
+
+    tf.summary.image('alignments',
+                     tf.expand_dims(images_stacked, -1),
+                     family='Images')
 
 
 def estimator_fn(features,
@@ -68,7 +77,7 @@ def estimator_fn(features,
         train_summaries(model, hparams)
     elif is_evaluating:
         print('Adding evaluation summaries to graph')
-        test_summaries(model, hparams)
+        eval_summaries(model, hparams)
 
     eval_summary_hook = tf.train.SummarySaverHook(
         save_step=1,
@@ -76,7 +85,6 @@ def estimator_fn(features,
         summary_op=tf.summary.merge_all())
 
     evaluation_hooks = [eval_summary_hook]
-
 
     return tf.estimator.EstimatorSpec(
         mode=mode,

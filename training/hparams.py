@@ -56,6 +56,7 @@ hparams = tf.contrib.training.HParams(
 	#Tacotron
     train_steps = 20000,
     eval_steps = 16,
+    eval_throttle_secs = 300,
 	outputs_per_step = 1, #number of frames to generate at each decoding step (speeds up computation and allows for higher batch size)
 	stop_at_any = True, #Determines whether the decoder should stop when predicting <stop> to any frame or to all of them
 
