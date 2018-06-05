@@ -3,21 +3,22 @@ import tacotron.models.tacotron as tacotron
 
 
 def train_summaries(model, hparams):
-    tf.summary.histogram('mel_outputs', model.mel_outputs)
-    tf.summary.histogram('mel_targets', model.mel_targets)
-    tf.summary.scalar('before_loss', model.before_loss)
-    tf.summary.scalar('after_loss', model.after_loss)
+    tf.summary.histogram('train/mel_outputs', model.mel_outputs)
+    tf.summary.histogram('train/mel_targets', model.mel_targets)
+    tf.summary.scalar('train/before_loss', model.before_loss)
+    tf.summary.scalar('train/after_loss', model.after_loss)
     if hparams.predict_linear:
-        tf.summary.scalar('linear_loss', model.linear_loss)
-    tf.summary.scalar('regularization_loss', model.regularization_loss)
-    tf.summary.scalar('stop_token_loss', model.stop_token_loss)
-    tf.summary.scalar('loss', model.loss)
-    tf.summary.scalar('learning_rate', model.learning_rate)
+        tf.summary.scalar('train/linear_loss', model.linear_loss)
+    tf.summary.scalar('train/regularization_loss', model.regularization_loss)
+    tf.summary.scalar('train/stop_token_loss', model.stop_token_loss)
+    tf.summary.scalar('train/loss', model.loss)
+    tf.summary.scalar('train/learning_rate', model.learning_rate)
     if hparams.tacotron_teacher_forcing_mode == 'scheduled':
-        tf.summary.scalar('teacher_forcing_ratio', model.ratio)
+        tf.summary.scalar('train/teacher_forcing_ratio', model.ratio)
     # gradient_norms = [tf.norm(grad) for grad in model.gradients]
-    # tf.summary.histogram('gradient_norm', gradient_norms)
-    # tf.summary.scalar('max_gradient_norm', tf.reduce_max(gradient_norms))
+    # tf.summary.histogram('train/gradient_norm', gradient_norms)
+    # tf.summary.scalar('train/max_gradient_norm',
+    #                    tf.reduce_max(gradient_norms))
 
 
 def eval_summaries(model, hparams):
