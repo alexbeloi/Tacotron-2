@@ -7,8 +7,8 @@ def train_summaries(model, hparams):
     tf.summary.histogram('train/mel_targets', model.mel_targets)
     tf.summary.scalar('train/before_loss', model.before_loss)
     tf.summary.scalar('train/after_loss', model.after_loss)
-    if hparams.predict_linear:
-        tf.summary.scalar('train/linear_loss', model.linear_loss)
+    # if hparams.predict_linear:
+    #     tf.summary.scalar('train/linear_loss', model.linear_loss)
     tf.summary.scalar('train/regularization_loss', model.regularization_loss)
     tf.summary.scalar('train/stop_token_loss', model.stop_token_loss)
     tf.summary.scalar('train/loss', model.loss)
@@ -29,14 +29,14 @@ def eval_summaries(model, hparams):
     tf.summary.scalar('eval_model/eval_stats/stop_token_loss',
                       model.stop_token_loss)
     tf.summary.scalar('eval_model/eval_stats/eval_loss', model.loss)
-    if model.linear_loss is not None:
-        tf.summary.scalar('model/eval_stats/eval_linear_loss',
-                          model.linear_loss)
+    # if model.linear_loss is not None:
+    #     tf.summary.scalar('model/eval_stats/eval_linear_loss',
+    #                       model.linear_loss)
     alignments = model.alignments
     images = []
-    for i in hparams.tacotron_batch_size:
+    for i in range(hparams.tacotron_batch_size):
         image = alignments[i, :, :model.targets_lengths[i]]
-        image_resized = tf.image.resize_image(image, [256, 256])
+        image_resized = tf.image.resize_images(image, [256, 256])
         images.append(image_resized)
     images_stacked = tf.stack(images)
 
@@ -81,7 +81,7 @@ def estimator_fn(features,
         eval_summaries(model, hparams)
 
     eval_summary_hook = tf.train.SummarySaverHook(
-        save_step=1,
+        save_steps=1,
         output_dir=params.job_dir,
         summary_op=tf.summary.merge_all())
 
