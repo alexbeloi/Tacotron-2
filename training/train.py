@@ -8,7 +8,7 @@ tf.logging.set_verbosity(tf.logging.INFO)
 
 
 def run_experiment(train_files, eval_files, hparams):
-    train_dataset = lambda: feeder.input_fn(train_files,  #pylama: ignore=E731
+    train_dataset = lambda: feeder.input_fn(train_files,
                                             shuffle=True,
                                             )
 
@@ -40,11 +40,15 @@ def run_experiment(train_files, eval_files, hparams):
     print('model dir {}'.format(run_config.model_dir))
     print(run_config)
 
-    _estimator = tf.estimator.Estimator(model_fn=estimator.estimator_fn,
+    if hparams.use_all_gpus:
+        _estimator_fn =  tf.contrib.estimator.replicate_model_fn(
+            estimator.estimator_fn)
+    else:
+        _estimator_fn = estimator.estimator_fn
+
+    _estimator = tf.estimator.Estimator(model_fn=_estimator_fn,
                                         params=hparams,
                                         config=run_config)
-    if hparams.use_all_gpus:
-        _estimator =  tf.contrib.estimator.replicate_model_fn(_estimator)
 
     tf.estimator.train_and_evaluate(_estimator, train_spec, eval_spec)
 
