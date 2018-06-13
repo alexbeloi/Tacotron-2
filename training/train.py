@@ -43,6 +43,9 @@ def run_experiment(train_files, eval_files, hparams):
     _estimator = tf.estimator.Estimator(model_fn=estimator.estimator_fn,
                                         params=hparams,
                                         config=run_config)
+    if hparams.use_all_gpus:
+        _estimator =  tf.contrib.estimator.replicate_model_fn(_estimator)
+
     tf.estimator.train_and_evaluate(_estimator, train_spec, eval_spec)
 
 

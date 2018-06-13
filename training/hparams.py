@@ -12,7 +12,7 @@ hparams = tf.contrib.training.HParams(
 	cleaners='english_cleaners',
 
 	#Hardware setup (TODO: multi-GPU parallel tacotron training)
-	use_all_gpus = False, #Whether to use all GPU resources. If True, total number of available gpus will override num_gpus.
+	use_all_gpus = True, #Whether to use all GPU resources. If True, total number of available gpus will override num_gpus.
 	num_gpus = 1, #Determines the number of gpus in use
 	###########################################################################################################################################
 

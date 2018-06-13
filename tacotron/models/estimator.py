@@ -57,15 +57,12 @@ def estimator_fn(features,
     is_training = mode == tf.estimator.ModeKeys.TRAIN
     is_evaluating = mode == tf.estimator.ModeKeys.EVAL
 
-    context_features = features['context_features']
-    sequence_features = features['sequence_features']
-
     global_step = tf.train.get_or_create_global_step()
-    model.initialize(sequence_features['text'],
-                     features['context_features']['text_length'],
-                     mel_targets=sequence_features['mel_spectrogram'],
-                     stop_token_targets=sequence_features['stop_token'],
-                     targets_lengths=context_features['mel_frames'],
+    model.initialize(features['sequence/text'],
+                     features['context/text_length'],
+                     mel_targets=features['sequence/mel_spectrogram'],
+                     stop_token_targets=features['sequence/stop_token'],
+                     targets_lengths=features['context/mel_frames'],
                      global_step=global_step,
                      is_training=is_training,
                      is_evaluating=is_evaluating,

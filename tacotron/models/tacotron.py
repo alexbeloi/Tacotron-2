@@ -260,6 +260,8 @@ class Tacotron():
 
             optimizer = tf.train.AdamOptimizer(self.learning_rate, hp.tacotron_adam_beta1,
                 hp.tacotron_adam_beta2, hp.tacotron_adam_epsilon)
+            if hp.use_all_gpus:
+                optimizer = tf.contrib.estimator.TowerOptimizer(optimizer)
             # self.optimize = optimizer.minimize(self.loss,
             #                                    global_step=global_step)
             gradients, variables = zip(*optimizer.compute_gradients(self.loss))

@@ -6,7 +6,7 @@ import training.hparams as hp
 import training.feature_specs as specs
 
 
-tf_config = os.environ.get('TF_CONFIG','')
+tf_config = os.environ.get('TF_CONFIG', '')
 try:
     tf_config_json = json.loads(tf_config)
 except json.decoder.JSONDecodeError:
@@ -38,8 +38,13 @@ def parse_example(example):
         context_features=context_features,
         sequence_features=sequence_features)
 
-    return {'context_features': con_feats_parsed,
-            'sequence_features': seq_feats_parsed}
+    features = {}
+    for k, t in con_feats_parsed.items():
+        features['context/' + k] = t
+    for k, t in seq_feats_parsed.items():
+        features['sequence/' + k] = t
+
+    return features
 
 
 def input_fn(glob,
