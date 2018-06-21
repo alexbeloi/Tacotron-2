@@ -6,7 +6,7 @@ import training.hparams as hp
 import training.feature_specs as specs
 
 
-tf_config = os.environ.get('TF_CONFIG','')
+tf_config = os.environ.get('TF_CONFIG', '')
 try:
     tf_config_json = json.loads(tf_config)
 except json.decoder.JSONDecodeError:
@@ -54,10 +54,9 @@ def input_fn(glob,
             int(tf_config_json.get('job', {}).get('worker_count', 1)),
             int(tf_config_json.get('task', {}).get('index', 0)))
 
-        if num_epochs:
-            dataset = dataset.repeat(num_epochs)
-        # if shuffle:
-        #     dataset = dataset.shuffle(buffer_size=batch_size * 10)
+        dataset = dataset.repeat(num_epochs)
+        if shuffle:
+            dataset = dataset.shuffle(buffer_size=batch_size * 10)
         dataset = dataset.map(parse_example,
                               num_parallel_calls=mp.cpu_count())
         batch_fn = tf.contrib.data.padded_batch_and_drop_remainder(
