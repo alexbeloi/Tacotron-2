@@ -1,4 +1,5 @@
 import numpy as np
+import tensorflow as tf
 import training.hparams as hp
 
 
@@ -58,4 +59,4 @@ PADDING_VALUES = {
     },
 }
 
-INPUT_COLUMNS = ['text']
+INPUT_COLUMNS = [tf.placeholder(tf.string, [None], name='text')]
