@@ -156,6 +156,8 @@ class Tacotron():
             #Grab alignments from the final decoder state
             alignments = tf.transpose(final_decoder_state.alignment_history.stack(), [1, 2, 0])
 
+            self.optimize = None
+            self.loss = None
             if is_training:
                 self.ratio = self.helper._ratio
             self.inputs = inputs

@@ -17,10 +17,6 @@ def parse_example(example):
     sequence_features = {
         'mel_spectrogram': tf.FixedLenSequenceFeature(
             [hp.hparams.num_mels], dtype=tf.float32),
-        # 'linear_spectrogram': tf.FixedLenSequenceFeature(
-        #    [hp.hparams.num_freq], dtype=tf.float32),
-        # 'audio': tf.FixedLenSequenceFeature(
-        #    [], dtype=tf.float32),
         'text': tf.FixedLenSequenceFeature(
             [], dtype=tf.int64),
         'stop_token': tf.FixedLenSequenceFeature(
@@ -28,9 +24,7 @@ def parse_example(example):
     }
     context_features = {
         'text_length': tf.FixedLenFeature([], dtype=tf.int64),
-        # 'time_steps': tf.FixedLenFeature([], dtype=tf.int64),
         'mel_frames': tf.FixedLenFeature([], dtype=tf.int64),
-        # 'linear_frames': tf.FixedLenFeature([], dtype=tf.int64),
     }
 
     con_feats_parsed, seq_feats_parsed = tf.parse_single_sequence_example(
@@ -38,8 +32,14 @@ def parse_example(example):
         context_features=context_features,
         sequence_features=sequence_features)
 
-    return {'context_features': con_feats_parsed,
-            'sequence_features': seq_feats_parsed}
+    features = {}
+    for k, f in seq_feats_parsed.items():
+        features['sequence_features.' + k] = f
+    for k, f in con_feats_parsed.items():
+        features['context_features.' + k] = f
+    print(features)
+
+    return features
 
 
 def input_fn(glob,
@@ -70,25 +70,30 @@ def input_fn(glob,
 
 def example_serving_input_fn():
     """Build the serving inputs."""
-    example_bytestring = tf.placeholder(
-        shape=[None],
+    example_bytestrings = tf.placeholder(
+        shape=None,
         dtype=tf.string,
     )
-    features = parse_example(example_bytestring)
+    features = parse_example(example_bytestrings)
     return tf.estimator.export.ServingInputReceiver(
         features,
-        {'example_proto': example_bytestring}
+        example_bytestrings,
     )
 
 
 # [START serving-function]
 def json_serving_input_fn():
     """Build the serving inputs."""
-    inputs = {}
-    for feat in specs.INPUT_COLUMNS:
-        inputs[feat.name] = tf.placeholder(shape=[None], dtype=feat.dtype)
+    receiver_inputs = {
+        'text': tf.placeholder(shape=[None, None], dtype=tf.int64),
+    }
+    inputs = {
+        'context_features.text_length': tf.map_fn(tf.size,
+                                                  receiver_inputs['text']),
+        'sequence_features.text': receiver_inputs['text'],
+    }
 
-    return tf.estimator.export.ServingInputReceiver(inputs, inputs)
+    return tf.estimator.export.ServingInputReceiver(inputs, receiver_inputs)
 # [END serving-function]
 
 

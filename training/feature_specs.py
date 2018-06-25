@@ -6,14 +6,10 @@ import training.hparams as hp
 DEFAULT_VALUES = {
     'context_features': {
         'text_length': np.int64(0),
-        # 'time_steps': np.int64(0),
         'mel_frames': np.int64(0),
-        # 'linear_frames': np.int64(0),
     },
     'sequence_features': {
         'mel_spectrogram': 0.,
-        # 'linear_spectrogram': 0.,
-        # 'audio': 0.,
         'text': np.int64(0),
         'stop_token': 0.,
     },
@@ -28,35 +24,17 @@ SPARES_FEATURES = [
 ]
 
 PADDED_SHAPES = {
-    'context_features': {
-        'text_length': [],
-        # 'time_steps': [],
-        'mel_frames': [],
-        # 'linear_frames': [],
-    },
-    'sequence_features': {
-        'mel_spectrogram': [None, hp.hparams.num_mels],
-        # 'linear_spectrogram': [None, hp.hparams.num_freq],
-        # 'audio': [None],
-        'text': [None],
-        'stop_token': [None],
-    },
+    'context_features.text_length': [],
+    'context_features.mel_frames': [],
+    'sequence_features.mel_spectrogram': [None, hp.hparams.num_mels],
+    'sequence_features.text': [None],
+    'sequence_features.stop_token': [None],
 }
 
 PADDING_VALUES = {
-    'context_features': {
-        'text_length': np.int64(0),
-        # 'time_steps': np.int64(0),
-        'mel_frames': np.int64(0),
-        # 'linear_frames': np.int64(0),
-    },
-    'sequence_features': {
-        'mel_spectrogram': 0.,
-        # 'linear_spectrogram': 0.,
-        # 'audio': 0.,
-        'text': np.int64(0),
-        'stop_token': 1.,
-    },
+    'context_features.text_length': np.int64(0),
+    'context_features.mel_frames': np.int64(0),
+    'sequence_features.mel_spectrogram': 0.,
+    'sequence_features.text': np.int64(0),
+    'sequence_features.stop_token': 1.,
 }
-
-INPUT_COLUMNS = [tf.placeholder(tf.string, [None], name='text')]
