@@ -8,7 +8,7 @@ tf.logging.set_verbosity(tf.logging.INFO)
 
 
 def run_experiment(train_files, eval_files, hparams):
-    train_dataset = lambda: feeder.input_fn(train_files,  #pylama: ignore=E731
+    train_dataset = lambda: feeder.input_fn(train_files,
                                             shuffle=True,
                                             )
 
@@ -20,9 +20,11 @@ def run_experiment(train_files, eval_files, hparams):
                                         max_steps=hparams.train_steps
                                         )
 
-    exporter = tf.estimator.FinalExporter(
+    exporter = tf.estimator.LatestExporter(
         'tacotron',
-        feeder.SERVING_FUNCTIONS[hparams.export_format])
+        feeder.SERVING_FUNCTIONS[hparams.export_format],
+        exports_to_keep=20,
+    )
 
     eval_spec = tf.estimator.EvalSpec(eval_dataset,
                                       steps=hparams.eval_steps,
