@@ -4,12 +4,15 @@ import numpy as np
 
 # Default hyperparameters
 hparams = tf.contrib.training.HParams(
-    export_format='JSON',
-    train_files=[''],
-    job_dir='job_dir',
+    export_format = 'JSON',
+    train_files = [''],
+    job_dir = 'job_dir',
 	# Comma-separated list of cleaners to run on text prior to training and eval. For non-English
 	# text, you may want to use "basic_cleaners" or "transliteration_cleaners".
-	cleaners='english_cleaners',
+	cleaners = 'english_cleaners',
+
+    #Dataset
+    prefetch_buffer_size = 4,
 
 	#Hardware setup (TODO: multi-GPU parallel tacotron training)
 	use_all_gpus = False, #Whether to use all GPU resources. If True, total number of available gpus will override num_gpus.

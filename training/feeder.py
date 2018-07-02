@@ -64,6 +64,7 @@ def input_fn(glob,
             padding_values=specs.PADDING_VALUES,
         )
         dataset = dataset.apply(batch_fn)
+        dataset = dataset.prefetch(buffer_size=hp.hparams.prefetch_buffer_size)
         return dataset
 
 
