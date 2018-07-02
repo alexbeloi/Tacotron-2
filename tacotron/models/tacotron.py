@@ -139,7 +139,8 @@ class Tacotron():
 
 
             #Compute the mel spectrogram
-            mel_outputs = decoder_output + projected_residual
+            mel_outputs = tf.add(decoder_output, projected_residual,
+                                 name='mel_outputs')
 
 
             if post_condition:
@@ -154,7 +155,10 @@ class Tacotron():
                 linear_outputs = FrameProjection(hp.num_freq, scope='post_processing_projection')(expand_outputs)
 
             #Grab alignments from the final decoder state
-            alignments = tf.transpose(final_decoder_state.alignment_history.stack(), [1, 2, 0])
+            alignments = tf.transpose(
+                final_decoder_state.alignment_history.stack(),
+                [1, 2, 0],
+                name='alignments')
 
             self.optimize = None
             self.loss = None

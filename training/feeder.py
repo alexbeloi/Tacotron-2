@@ -37,7 +37,6 @@ def parse_example(example):
         features['sequence_features.' + k] = f
     for k, f in con_feats_parsed.items():
         features['context_features.' + k] = f
-    print(features)
 
     return features
 
@@ -75,6 +74,8 @@ def example_serving_input_fn():
         dtype=tf.string,
     )
     features = parse_example(example_bytestrings)
+    for k, t in features.items():
+        features[k] = tf.expand_dims(t, 0)
     return tf.estimator.export.ServingInputReceiver(
         features,
         example_bytestrings,
@@ -85,12 +86,15 @@ def example_serving_input_fn():
 def json_serving_input_fn():
     """Build the serving inputs."""
     receiver_inputs = {
-        'text': tf.placeholder(shape=[None, None], dtype=tf.int64),
+        'text': tf.placeholder(shape=[None, None], dtype=tf.int32,
+        name='inputs'),
     }
+    text = tf.cast(receiver_inputs['text'], tf.int64)
+    lengths = tf.map_fn(lambda t: tf.size(t, out_type=tf.int64), text,
+                        dtype=tf.int64)
     inputs = {
-        'context_features.text_length': tf.map_fn(tf.size,
-                                                  receiver_inputs['text']),
-        'sequence_features.text': receiver_inputs['text'],
+        'context_features.text_length': lengths,
+        'sequence_features.text': text,
     }
 
     return tf.estimator.export.ServingInputReceiver(inputs, receiver_inputs)
