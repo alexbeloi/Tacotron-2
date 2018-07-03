@@ -154,7 +154,7 @@ def _teacher_forcing_ratio_decay(init_tfr, global_step, hparams):
 
 		#force teacher forcing ratio to take initial value when global step < start decay step.
 		narrow_tfr = tf.cond(
-			tf.less(global_step, tf.convert_to_tensor(hparams.tacotron_teacher_forcing_start_decay)),
+			tf.less(global_step, tf.convert_to_tensor(hparams.tacotron_teacher_forcing_start_decay, dtype=tf.int64)),
 			lambda: tf.convert_to_tensor(init_tfr),
 			lambda: tfr)
 

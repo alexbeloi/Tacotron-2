@@ -19,9 +19,10 @@ def create_summaries(model, hparams, is_training=False, is_evaluating=True):
                           model.regularization_loss)
         tf.summary.scalar(prefix + 'stop_token_loss', model.stop_token_loss)
         tf.summary.scalar(prefix + 'loss', model.loss)
-        if hparams.tacotron_teacher_forcing_mode == 'scheduled':
-            tf.summary.scalar(prefix + 'teacher_forcing_ratio', model.ratio)
         if is_training:
+            if hparams.tacotron_teacher_forcing_mode == 'scheduled':
+                tf.summary.scalar(
+                    prefix + 'teacher_forcing_ratio', model.ratio)
             tf.summary.scalar(prefix + 'learning_rate', model.learning_rate)
         alignments = model.alignments
         images = []

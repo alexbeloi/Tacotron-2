@@ -2,6 +2,7 @@ import argparse
 import tensorflow as tf
 import training.feeder as feeder
 import training.hparams as hp
+import training.utils as utils
 import tacotron.models.estimator as estimator
 
 tf.logging.set_verbosity(tf.logging.INFO)
@@ -67,6 +68,20 @@ def parse_args():
         help='GCS or local paths to save run files and output',
         required=True,
     )
+    parser.add_argument(
+        '--profile',
+        type=bool,
+        default=False,
+        help='Attach profiler to main training loop',
+        required=False,
+    )
+    parser.add_argument(
+        '--profile-dir',
+        type=str,
+        default=None,
+        help='Path to write profiler ouputs',
+        required=False,
+    )
 
     return parser.parse_args()
 
@@ -74,4 +89,8 @@ def parse_args():
 if __name__ == '__main__':
     args = parse_args()
     hparams = hp.hparams.override_from_dict({'job_dir': args.job_dir})
-    run_experiment(args.train_files, args.eval_files, hparams)
+    if args.profile:
+        utils.profile(args.profile_dir)(
+            run_experiment)(args.train_files, args.eval_files, hparams)
+    else:
+        run_experiment(args.train_files, args.eval_files, hparams)
