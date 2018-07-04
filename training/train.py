@@ -82,6 +82,13 @@ def parse_args():
         help='Path to write profiler ouputs',
         required=False,
     )
+    parser.add_argument(
+        '--learning-rate',
+        type=float,
+        default=None,
+        help='Override learning rate',
+        required=False,
+    )
 
     return parser.parse_args()
 
@@ -89,6 +96,8 @@ def parse_args():
 if __name__ == '__main__':
     args = parse_args()
     hparams = hp.hparams.override_from_dict({'job_dir': args.job_dir})
+    hparams = hp.hparams.override_from_dict(
+        {'tacotron_initial_learning_rate': args.learning_rate})
     if args.profile:
         utils.profile(args.profile_dir)(
             run_experiment)(args.train_files, args.eval_files, hparams)
