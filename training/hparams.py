@@ -63,7 +63,7 @@ hparams = tf.contrib.training.HParams(
 	###########################################################################################################################################
 
 	#Tacotron
-    train_steps = 5000,
+    train_steps = 20000,
     eval_steps = 16,
     eval_throttle_secs = 300,
 	outputs_per_step = 1, #number of frames to generate at each decoding step (speeds up computation and allows for higher batch size)
@@ -144,12 +144,17 @@ hparams = tf.contrib.training.HParams(
 	tacotron_test_batches = 32, #number of test batches (For Ljspeech: 10% ~= 41 batches of 32 samples)
 	tacotron_data_random_state=1234, #random state for train test split repeatability
 
-	tacotron_decay_learning_rate = True, #boolean, determines if the learning rate will follow an exponential decay
+	tacotron_decay_learning_rate = False, #boolean, determines if the learning rate will follow an exponential decay
 	tacotron_start_decay = 50000, #Step at which learning decay starts
 	tacotron_decay_steps = 40000, #Determines the learning rate decay slope (UNDER TEST)
 	tacotron_decay_rate = 0.2, #learning rate decay rate (UNDER TEST)
 	tacotron_initial_learning_rate = 1e-3, #starting learning rate
 	tacotron_final_learning_rate = 1e-5, #minimal learning rate
+
+    tacotron_cyclic_learning_rate = True,
+    tacotron_max_learning_rate = 1e-3,
+    tacotron_min_learning_rate = 1e-3 / 4,
+    tacotron_cyclic_step_size = 1000,
 
 	tacotron_adam_beta1 = 0.9, #AdamOptimizer beta1 parameter
 	tacotron_adam_beta2 = 0.999, #AdamOptimizer beta2 parameter

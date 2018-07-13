@@ -260,14 +260,30 @@ class Tacotron():
             if hp.tacotron_decay_learning_rate:
                 self.decay_steps = hp.tacotron_decay_steps
                 self.decay_rate = hp.tacotron_decay_rate
-                self.learning_rate = self._learning_rate_decay(hp.tacotron_initial_learning_rate, global_step)
+                self.learning_rate = self._learning_rate_decay(
+                    hp.tacotron_initial_learning_rate, global_step)
+            elif hp.tacotron_cyclic_learning_rate:
+                self.learning_rate = self._learning_rate_cyclic(
+                    hp.tacotron_min_learning_rate,
+                    hp.tacotron_max_learning_rate,
+                    hp.tacotron_cyclic_step_size,
+                    global_step)
             else:
                 self.learning_rate = tf.convert_to_tensor(hp.tacotron_initial_learning_rate)
 
-            optimizer = tf.train.AdamOptimizer(self.learning_rate, hp.tacotron_adam_beta1,
-                hp.tacotron_adam_beta2, hp.tacotron_adam_epsilon)
-            # self.optimize = optimizer.minimize(self.loss,
-            #                                    global_step=global_step)
+            # Compute the regularization weight
+            if hp.tacotron_scale_regularization:
+                reg_weight_scaler = 1. / (2 * hp.max_abs_value) if hp.symmetric_mels else 1. / (hp.max_abs_value)
+                reg_weight = hp.tacotron_reg_weight * reg_weight_scaler
+            else:
+                reg_weight = hp.tacotron_reg_weight
+
+            optimizer = tf.contrib.opt.AdamWOptimizer(
+                reg_weight.
+                self.learning_rate,
+                hp.tacotron_adam_beta1,
+                hp.tacotron_adam_beta2,
+                hp.tacotron_adam_epsilon)
             gradients, variables = zip(*optimizer.compute_gradients(self.loss))
             self.gradients = gradients
             #Just for causion
@@ -306,3 +322,9 @@ class Tacotron():
 
         #clip learning rate by max and min values (initial and final values)
         return tf.minimum(tf.maximum(lr, hp.tacotron_final_learning_rate), init_lr)
+
+    def _learning_rate_cyclic(self, min_lr, max_lr, step_size, global_step):
+        """Sawtooth cyclic learning rate"""
+        step = tf.floormod(global_step, 2 * step_size)
+        slope = tf.abs(max_lr - min_lr) / step_size
+        return -1 * tf.abs(step - step_size) * slope + max_lr
