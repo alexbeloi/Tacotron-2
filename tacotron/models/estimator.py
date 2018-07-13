@@ -69,17 +69,17 @@ def estimator_fn(features,
 
     create_summaries(model, hparams, is_training=is_training,
                      is_evaluating=is_evaluating)
-
+    predictions = {
+        'mel_output': model.mel_outputs,
+        'stop_token': model.stop_token_prediction,
+        'alignments': model.alignments,
+    }
     export_outputs = {
-        'predict': tf.estimator.export.PredictOutput({
-            'mels': model.mel_outputs,
-            'alignments': model.alignments,
-            'stop_token': model.stop_token_prediction,
-        }),
+        'predict': tf.estimator.export.PredictOutput(predictions),
     }
     return tf.estimator.EstimatorSpec(
         mode=mode,
-        predictions=model.mel_outputs,
+        predictions=predictions,
         loss=model.loss,
         train_op=model.optimize,
         export_outputs=export_outputs,
