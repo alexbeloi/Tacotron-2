@@ -279,7 +279,7 @@ class Tacotron():
                 reg_weight = hp.tacotron_reg_weight
 
             optimizer = tf.contrib.opt.AdamWOptimizer(
-                reg_weight.
+                reg_weight,
                 self.learning_rate,
                 hp.tacotron_adam_beta1,
                 hp.tacotron_adam_beta2,
@@ -327,4 +327,4 @@ class Tacotron():
         """Sawtooth cyclic learning rate"""
         step = tf.floormod(global_step, 2 * step_size)
         slope = tf.abs(max_lr - min_lr) / step_size
-        return -1 * tf.abs(step - step_size) * slope + max_lr
+        return -1. * tf.to_float(tf.abs(step - step_size)) * slope + max_lr

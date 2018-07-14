@@ -95,9 +95,11 @@ def parse_args():
 
 if __name__ == '__main__':
     args = parse_args()
-    hparams = hp.hparams.override_from_dict({'job_dir': args.job_dir})
-    hparams = hp.hparams.override_from_dict(
-        {'tacotron_initial_learning_rate': args.learning_rate})
+    if args.job_dir:
+        hparams = hp.hparams.override_from_dict({'job_dir': args.job_dir})
+    if args.learning_rate:
+        hparams = hp.hparams.override_from_dict(
+            {'tacotron_initial_learning_rate': args.learning_rate})
     if args.profile:
         utils.profile(args.profile_dir)(
             run_experiment)(args.train_files, args.eval_files, hparams)

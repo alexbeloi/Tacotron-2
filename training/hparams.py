@@ -152,8 +152,8 @@ hparams = tf.contrib.training.HParams(
 	tacotron_final_learning_rate = 1e-5, #minimal learning rate
 
     tacotron_cyclic_learning_rate = True,
-    tacotron_max_learning_rate = 1e-3,
-    tacotron_min_learning_rate = 1e-3 / 4,
+    tacotron_max_learning_rate = 1e-2,
+    tacotron_min_learning_rate = 1e-3 ,
     tacotron_cyclic_step_size = 1000,
 
 	tacotron_adam_beta1 = 0.9, #AdamOptimizer beta1 parameter
