@@ -63,10 +63,10 @@ hparams = tf.contrib.training.HParams(
 	###########################################################################################################################################
 
 	#Tacotron
-    train_steps = 20000,
+    train_steps = 200000,
     eval_steps = 16,
     eval_throttle_secs = 300,
-	outputs_per_step = 1, #number of frames to generate at each decoding step (speeds up computation and allows for higher batch size)
+	outputs_per_step = 5, #number of frames to generate at each decoding step (speeds up computation and allows for higher batch size)
 	stop_at_any = True, #Determines whether the decoder should stop when predicting <stop> to any frame or to all of them
 
 	embedding_dim = 512, #dimension of embedding space
@@ -145,8 +145,8 @@ hparams = tf.contrib.training.HParams(
 	tacotron_data_random_state=1234, #random state for train test split repeatability
 
 	tacotron_decay_learning_rate = False, #boolean, determines if the learning rate will follow an exponential decay
-	tacotron_start_decay = 50000, #Step at which learning decay starts
-	tacotron_decay_steps = 40000, #Determines the learning rate decay slope (UNDER TEST)
+	tacotron_start_decay = 10000, #Step at which learning decay starts
+	tacotron_decay_steps = 10000, #Determines the learning rate decay slope (UNDER TEST)
 	tacotron_decay_rate = 0.2, #learning rate decay rate (UNDER TEST)
 	tacotron_initial_learning_rate = 1e-3, #starting learning rate
 	tacotron_final_learning_rate = 1e-5, #minimal learning rate
