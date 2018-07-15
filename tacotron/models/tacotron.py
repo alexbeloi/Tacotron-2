@@ -16,9 +16,10 @@ class Tacotron():
     def __init__(self, hparams):
         self._hparams = hparams
 
-
-    def initialize(self, inputs, input_lengths, mel_targets=None, stop_token_targets=None, linear_targets=None, targets_lengths=None, gta=False,
-            global_step=None, is_training=False, is_evaluating=False):
+    def initialize(self, inputs, input_lengths, mel_targets=None,
+                   stop_token_targets=None, linear_targets=None,
+                   targets_lengths=None, gta=False, global_step=None,
+                   is_training=False, is_evaluating=False):
         """
         Initializes the model for inference
 
@@ -228,19 +229,6 @@ class Tacotron():
             else:
                 linear_loss = 0.
 
-            # Compute the regularization weight
-            if hp.tacotron_scale_regularization:
-                reg_weight_scaler = 1. / (2 * hp.max_abs_value) if hp.symmetric_mels else 1. / (hp.max_abs_value)
-                reg_weight = hp.tacotron_reg_weight * reg_weight_scaler
-            else:
-                reg_weight = hp.tacotron_reg_weight
-            reg_weight = reg_weight / 100.
-
-            # Get all trainable variables
-            all_vars = tf.trainable_variables()
-            regularization = tf.add_n([tf.nn.l2_loss(v) for v in all_vars
-                if not('bias' in v.name or 'Bias' in v.name)]) * reg_weight
-
             # Compute final loss term
             self.before_loss = before
             self.after_loss = after
@@ -248,7 +236,7 @@ class Tacotron():
             self.regularization_loss = regularization
             self.linear_loss = linear_loss
 
-            self.loss = self.before_loss + self.after_loss + self.stop_token_loss + self.regularization_loss + self.linear_loss
+            self.loss = self.before_loss + self.after_loss + self.stop_token_loss + self.linear_loss
 
     def add_optimizer(self, global_step):
         '''Adds optimizer. Sets "gradients" and "optimize" fields. add_loss must have been called.
@@ -258,45 +246,36 @@ class Tacotron():
         '''
         with tf.variable_scope('optimizer') as scope:
             hp = self._hparams
-            if hp.tacotron_decay_learning_rate:
-                self.decay_steps = hp.tacotron_decay_steps
-                self.decay_rate = hp.tacotron_decay_rate
-                self.learning_rate = self._learning_rate_decay(
-                    hp.tacotron_initial_learning_rate, global_step)
-            elif hp.tacotron_cyclic_learning_rate:
+            if hp.tacotron_cyclic_learning_rate:
                 self.learning_rate = self._learning_rate_cyclic(
                     hp.tacotron_min_learning_rate,
                     hp.tacotron_max_learning_rate,
                     hp.tacotron_cyclic_step_size,
                     global_step)
+            if hp.tacotron_decay_learning_rate:
+                if hp.tacotron_cyclic_learning_rate:
+                    init_learning_rate = self.learning_rate
+                else:
+                    init_learning_rate = hp.tacotron_initial_learning_rate
+                self.decay_steps = hp.tacotron_decay_steps
+                self.decay_rate = hp.tacotron_decay_rate
+                self.learning_rate = self._learning_rate_decay(
+                    init_learning_rate, global_step)
             else:
-                self.learning_rate = tf.convert_to_tensor(hp.tacotron_initial_learning_rate)
-
-            # Compute the regularization weight
-            if hp.tacotron_scale_regularization:
-                reg_weight_scaler = 1. / (2 * hp.max_abs_value) if hp.symmetric_mels else 1. / (hp.max_abs_value)
-                reg_weight = hp.tacotron_reg_weight * reg_weight_scaler
-            else:
-                reg_weight = hp.tacotron_reg_weight
+                self.learning_rate = tf.convert_to_tensor(
+                    hp.tacotron_initial_learning_rate)
 
             optimizer = tf.contrib.opt.AdamWOptimizer(
-                reg_weight,
+                hp.tacotron_reg_weight,
                 self.learning_rate,
                 hp.tacotron_adam_beta1,
                 hp.tacotron_adam_beta2,
                 hp.tacotron_adam_epsilon)
-            gradients, variables = zip(*optimizer.compute_gradients(self.loss))
-            self.gradients = gradients
-            #Just for causion
-            #https://github.com/Rayhane-mamah/Tacotron-2/issues/11
-            clipped_gradients, _ = tf.clip_by_global_norm(gradients, 1.)
-            self.clipped_gradients = clipped_gradients
 
             # Add dependency on UPDATE_OPS; otherwise batchnorm won't work correctly. See:
             # https://github.com/tensorflow/tensorflow/issues/1122
             with tf.control_dependencies(tf.get_collection(tf.GraphKeys.UPDATE_OPS)):
-                self.optimize = optimizer.apply_gradients(zip(clipped_gradients, variables),
-                    global_step=global_step)
+                self.optimize = optimizer.minimize(self.loss)
 
     def _learning_rate_decay(self, init_lr, global_step):
         #################################################################
