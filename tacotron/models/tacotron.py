@@ -233,7 +233,6 @@ class Tacotron():
             self.before_loss = before
             self.after_loss = after
             self.stop_token_loss = stop_token_loss
-            self.regularization_loss = regularization
             self.linear_loss = linear_loss
 
             self.loss = self.before_loss + self.after_loss + self.stop_token_loss + self.linear_loss
