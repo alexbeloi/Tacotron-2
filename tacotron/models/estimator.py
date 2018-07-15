@@ -69,7 +69,7 @@ def estimator_fn(features,
 
     # Create a SummarySaverHook
     eval_summary_hook = tf.train.SummarySaverHook(
-                                        save_steps=1,
+                                        save_steps=10,
                                         output_dir=hparams.job_dir + "/eval",
                                         summary_op=tf.summary.merge_all())
 
