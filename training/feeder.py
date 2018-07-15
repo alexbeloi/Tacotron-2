@@ -55,15 +55,15 @@ def input_fn(glob,
 
         dataset = dataset.repeat(num_epochs)
         if shuffle:
-            dataset = dataset.shuffle(buffer_size=batch_size * 10)
+            dataset = dataset.shuffle(buffer_size=batch_size * 5)
         dataset = dataset.map(parse_example,
                               num_parallel_calls=mp.cpu_count())
-        batch_fn = tf.contrib.data.padded_batch_and_drop_remainder(
+        dataset = dataset.padded_batch(
             batch_size=batch_size,
             padded_shapes=specs.PADDED_SHAPES,
             padding_values=specs.PADDING_VALUES,
+            drop_remainder=True,
         )
-        dataset = dataset.apply(batch_fn)
         dataset = dataset.prefetch(buffer_size=hp.hparams.prefetch_buffer_size)
         return dataset
 
