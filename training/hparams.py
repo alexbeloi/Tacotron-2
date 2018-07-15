@@ -12,7 +12,7 @@ hparams = tf.contrib.training.HParams(
 	cleaners = 'english_cleaners',
 
     #Dataset
-    prefetch_buffer_size = 4,
+    prefetch_buffer_size = 2,
 
 	#Hardware setup (TODO: multi-GPU parallel tacotron training)
 	use_all_gpus = False, #Whether to use all GPU resources. If True, total number of available gpus will override num_gpus.
@@ -176,7 +176,7 @@ hparams = tf.contrib.training.HParams(
 	tacotron_teacher_forcing_init_ratio = 1., #initial teacher forcing ratio. Relevant if mode='scheduled'
 	tacotron_teacher_forcing_final_ratio = 0., #final teacher forcing ratio. Relevant if mode='scheduled'
 	tacotron_teacher_forcing_start_decay = 10000, #starting point of teacher forcing ratio decay. Relevant if mode='scheduled'
-	tacotron_teacher_forcing_decay_steps = 280000, #Determines the teacher forcing ratio decay slope. Relevant if mode='scheduled'
+	tacotron_teacher_forcing_decay_steps = 200000, #Determines the teacher forcing ratio decay slope. Relevant if mode='scheduled'
 	tacotron_teacher_forcing_decay_alpha = 0., #teacher forcing ratio decay rate. Relevant if mode='scheduled'
 	###########################################################################################################################################
 

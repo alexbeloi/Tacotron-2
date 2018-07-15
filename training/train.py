@@ -36,8 +36,8 @@ def run_experiment(train_files, eval_files, hparams):
 
     run_config = tf.estimator.RunConfig(
         model_dir=hparams.job_dir,
-        save_summary_steps=1,
-        log_step_count_steps=1,
+        save_summary_steps=10,
+        log_step_count_steps=10,
     )
 
     _estimator = tf.estimator.Estimator(model_fn=estimator.estimator_fn,

@@ -234,6 +234,7 @@ class Tacotron():
                 reg_weight = hp.tacotron_reg_weight * reg_weight_scaler
             else:
                 reg_weight = hp.tacotron_reg_weight
+            reg_weight = reg_weight / 100.
 
             # Get all trainable variables
             all_vars = tf.trainable_variables()

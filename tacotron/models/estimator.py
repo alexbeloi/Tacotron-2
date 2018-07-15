@@ -15,8 +15,6 @@ def create_summaries(model, hparams, is_training=False, is_evaluating=True):
         tf.summary.histogram(prefix + 'mel_targets', model.mel_targets)
         tf.summary.scalar(prefix + 'before_loss', model.before_loss)
         tf.summary.scalar(prefix + 'after_loss', model.after_loss)
-        tf.summary.scalar(prefix + 'regularization_loss',
-                          model.regularization_loss)
         tf.summary.scalar(prefix + 'stop_token_loss', model.stop_token_loss)
         tf.summary.scalar(prefix + 'loss', model.loss)
         if is_training:
@@ -34,8 +32,7 @@ def create_summaries(model, hparams, is_training=False, is_evaluating=True):
         images_stacked = tf.stack(images)
 
         tf.summary.image(prefix + 'alignments',
-                         images_stacked,
-                         family='Images')
+                         images_stacked)
 
 
 def estimator_fn(features,
@@ -69,6 +66,13 @@ def estimator_fn(features,
 
     create_summaries(model, hparams, is_training=is_training,
                      is_evaluating=is_evaluating)
+
+    # Create a SummarySaverHook
+    eval_summary_hook = tf.train.SummarySaverHook(
+                                        save_steps=1,
+                                        output_dir=hparams.job_dir + "/eval",
+                                        summary_op=tf.summary.merge_all())
+
     predictions = {
         'mel_output': model.mel_outputs,
         'stop_token': model.stop_token_prediction,
@@ -83,4 +87,5 @@ def estimator_fn(features,
         loss=model.loss,
         train_op=model.optimize,
         export_outputs=export_outputs,
+        evaluation_hooks=[eval_summary_hook],
     )
