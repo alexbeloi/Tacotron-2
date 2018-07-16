@@ -8,6 +8,20 @@ import tacotron.models.estimator as estimator
 tf.logging.set_verbosity(tf.logging.INFO)
 
 
+def _distribution_strategy(hparams):
+    distribution = None
+    if hparams.distribute:
+        num_gpus = hparams.num_gpus
+        if num_gpus == 1:
+            distribution = tf.contrib.distribute.OneDeviceStrategy(
+                device='/gpu:0')
+        elif num_gpus > 1:
+            distribution = tf.contrib.distribute.MirroredStrategy(
+                num_gpus=hparams.num_gpus)
+    return distribution
+
+
+
 def run_experiment(train_files, eval_files, hparams):
     train_dataset = lambda: feeder.input_fn(train_files,
                                             shuffle=True,
@@ -34,11 +48,7 @@ def run_experiment(train_files, eval_files, hparams):
                                       throttle_secs=hparams.eval_throttle_secs,
                                       )
 
-    if hparams.distribute:
-        distribution = tf.contrib.distribute.MirroredStrategy(
-            num_gpus=hparams.num_gpus)
-    else:
-        distribution = None
+    distribution = _distribution_strategy(hparams)
 
     run_config = tf.estimator.RunConfig(
         model_dir=hparams.job_dir,
