@@ -348,4 +348,4 @@ class Tacotron():
     def _curriculum_dropout(self, drop_rate, gamma, global_step):
         """Decays dropout from 1 to final dropout value exponentially"""
         interpolating_factor = tf.exp(-1. * gamma * tf.to_float(global_step))
-        return (1. - drop_rate) * interpolating_factor + drop_rate
+        return  drop_rate - drop_rate * interpolating_factor
