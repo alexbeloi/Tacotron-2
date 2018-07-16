@@ -306,12 +306,20 @@ class Tacotron():
                 self.learning_rate,
                 hp.tacotron_adam_beta1,
                 hp.tacotron_adam_beta2,
-                hp.tacotron_adam_epsilon)
+                hp.tacotron_adam_epsilon,
+            )
+
+            decay_var_list = [v for v in tf.trainable_variables()
+                if not('bias' in v.name
+                       or 'Bias' in v.name
+                       or 'embedding' in v.name)]
+            grads = optimizer.compute_gradients(self.loss)
 
             # Add dependency on UPDATE_OPS; otherwise batchnorm won't work correctly. See:
             # https://github.com/tensorflow/tensorflow/issues/1122
             with tf.control_dependencies(tf.get_collection(tf.GraphKeys.UPDATE_OPS)):
-                self.optimize = optimizer.minimize(self.loss)
+                self.optimize = optimizer.apply_gradients(grads, decay_var_list=decay_var_list)
+
 
     def _learning_rate_decay(self, init_lr, global_step):
         #################################################################
