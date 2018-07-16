@@ -50,6 +50,25 @@ class Tacotron():
         with tf.variable_scope('inference') as scope:
             batch_size = tf.shape(inputs)[0]
             hp = self._hparams
+
+            if hp.tacotron_curriculum_dropout_rate:
+                assert global_step is not None
+                self.dropout_rate = self._curriculum_dropout(
+                    hp.tacotron_dropout_rate,
+                    hp.tacotron_curriculum_dropout_gamma,
+                    global_step)
+            else:
+                self.dropout_rate = hp.tacotron_dropout_rate
+
+            if hp.tacotron_curriculum_zoneout_rate:
+                assert global_step is not None
+                self.zoneout_rate = self._curriculum_dropout(
+                    hp.tacotron_zoneout_rate,
+                    hp.tacotron_curriculum_zoneout_gamma,
+                    global_step)
+            else:
+                self.zoneout_rate = hp.tacotron_zoneout_rate
+
             assert hp.tacotron_teacher_forcing_mode in ('constant', 'scheduled')
             if hp.tacotron_teacher_forcing_mode == 'scheduled' and is_training:
                 assert global_step is not None
@@ -65,9 +84,14 @@ class Tacotron():
 
             #Encoder Cell ==> [batch_size, encoder_steps, encoder_lstm_units]
             encoder_cell = TacotronEncoderCell(
-                EncoderConvolutions(is_training, hparams=hp, scope='encoder_convolutions'),
+                EncoderConvolutions(is_training,
+                                    hp.enc_conv_kernel_size,
+                                    hp.enc_conv_channels,
+                                    hp.enc_conv_num_layers,
+                                    self.dropout_rate,
+                                    scope='encoder_convolutions'),
                 EncoderRNN(is_training, size=hp.encoder_lstm_units,
-                    zoneout=hp.tacotron_zoneout_rate, scope='encoder_LSTM'))
+                    zoneout=self.zoneout_rate, scope='encoder_LSTM'))
 
             encoder_outputs = encoder_cell(embedded_inputs, input_lengths)
 
@@ -77,14 +101,17 @@ class Tacotron():
 
             #Decoder Parts
             #Attention Decoder Prenet
-            prenet = Prenet(is_training, layers_sizes=hp.prenet_layers, drop_rate=hp.tacotron_dropout_rate, scope='decoder_prenet')
+            prenet = Prenet(is_training,
+                            layers_sizes=hp.prenet_layers,
+                            drop_rate=self.dropout_rate,
+                            scope='decoder_prenet')
             #Attention Mechanism
             attention_mechanism = LocationSensitiveAttention(hp.attention_dim, encoder_outputs, hparams=hp,
                 mask_encoder=hp.mask_encoder, memory_sequence_length=input_lengths, smoothing=hp.smoothing,
                 cumulate_weights=hp.cumulative_weights)
             #Decoder LSTM Cells
             decoder_lstm = DecoderRNN(is_training, layers=hp.decoder_layers,
-                size=hp.decoder_lstm_units, zoneout=hp.tacotron_zoneout_rate, scope='decoder_lstm')
+                size=hp.decoder_lstm_units, zoneout=self.zoneout_rate, scope='decoder_lstm')
             #Frames Projection layer
             frame_projection = FrameProjection(hp.num_mels * hp.outputs_per_step, scope='linear_transform')
             #<stop_token> projection layer
@@ -128,7 +155,12 @@ class Tacotron():
 
 
             #Postnet
-            postnet = Postnet(is_training, hparams=hp, scope='postnet_convolutions')
+            postnet = Postnet(is_training,
+                              hp.postnet_kernel_size,
+                              hp.postnet_channels,
+                              hp.postnet_num_layers,
+                              self.dropout_rate,
+                              scope='postnet_convolutions')
 
             #Compute residual using post-net ==> [batch_size, decoder_steps * r, postnet_channels]
             residual = postnet(decoder_output)
@@ -148,9 +180,14 @@ class Tacotron():
                 #Based on https://github.com/keithito/tacotron/blob/tacotron2-work-in-progress/models/tacotron.py
                 #Post-processing Network to map mels to linear spectrograms using same architecture as the encoder
                 post_processing_cell = TacotronEncoderCell(
-                EncoderConvolutions(is_training, hparams=hp, scope='post_processing_convolutions'),
+                EncoderConvolutions(is_training,
+                                    hp.enc_conv_kernel_size,
+                                    hp.enc_conv_channels,
+                                    hp.enc_conv_num_layers,
+                                    self.dropout_rate,
+                                    scope='post_processing_convolutions'),
                 EncoderRNN(is_training, size=hp.encoder_lstm_units,
-                    zoneout=hp.tacotron_zoneout_rate, scope='post_processing_LSTM'))
+                    zoneout=self.zoneout_rate, scope='post_processing_LSTM'))
 
                 expand_outputs = post_processing_cell(mel_outputs)
                 linear_outputs = FrameProjection(hp.num_freq, scope='post_processing_projection')(expand_outputs)
@@ -307,3 +344,8 @@ class Tacotron():
         step = tf.floormod(global_step, 2 * step_size)
         slope = tf.abs(max_lr - min_lr) / step_size
         return -1. * tf.to_float(tf.abs(step - step_size)) * slope + max_lr
+
+    def _curriculum_dropout(self, drop_rate, gamma, global_step):
+        """Decays dropout from 1 to final dropout value exponentially"""
+        interpolating_factor = tf.exp(-1. * gamma * tf.to_float(global_step))
+        return (1. - drop_rate) * interpolating_factor + drop_rate

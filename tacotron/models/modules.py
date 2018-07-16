@@ -28,11 +28,11 @@ class ZoneoutLSTMCell(tf.nn.rnn_cell.RNNCell):
     def __init__(self, num_units, is_training, zoneout_factor_cell=0., zoneout_factor_output=0., state_is_tuple=True, name=None):
         '''Initializer with possibility to set different zoneout values for cell/hidden states.
         '''
-        zm = min(zoneout_factor_output, zoneout_factor_cell)
-        zs = max(zoneout_factor_output, zoneout_factor_cell)
+        zm = tf.minimum(zoneout_factor_output, zoneout_factor_cell)
+        zs = tf.maximum(zoneout_factor_output, zoneout_factor_cell)
 
-        if zm < 0. or zs > 1.:
-            raise ValueError('One/both provided Zoneout factors are not in [0, 1]')
+        tf.assert_greater(zm, 0., message='Zoneout out of bounds [0, 1]')
+        tf.assert_less(zs, 1., message='Zoneout out of bounds [0, 1]')
 
         self._cell = tf.nn.rnn_cell.LSTMCell(num_units, state_is_tuple=state_is_tuple, name=name)
         self._zoneout_cell = zoneout_factor_cell
@@ -82,7 +82,8 @@ class ZoneoutLSTMCell(tf.nn.rnn_cell.RNNCell):
 class EncoderConvolutions:
     """Encoder convolutional layers used to find local dependencies in inputs characters.
     """
-    def __init__(self, is_training, hparams, activation=tf.nn.relu, scope=None):
+    def __init__(self, is_training, kernel_size, num_channels=512, num_layers=1,
+                 dropout_rate=0., activation=tf.nn.relu, scope=None):
         """
         Args:
             is_training: Boolean, determines if the model is training or in inference to control dropout
@@ -94,12 +95,12 @@ class EncoderConvolutions:
         super(EncoderConvolutions, self).__init__()
         self.is_training = is_training
 
-        self.kernel_size = hparams.enc_conv_kernel_size
-        self.channels = hparams.enc_conv_channels
+        self.kernel_size = kernel_size
+        self.channels = num_channels
         self.activation = activation
         self.scope = 'enc_conv_layers' if scope is None else scope
-        self.drop_rate = hparams.tacotron_dropout_rate
-        self.enc_conv_num_layers = hparams.enc_conv_num_layers
+        self.drop_rate = dropout_rate
+        self.enc_conv_num_layers = num_layers
 
     def __call__(self, inputs):
         with tf.variable_scope(self.scope):
@@ -281,24 +282,26 @@ class StopProjection:
 class Postnet:
     """Postnet that takes final decoder output and fine tunes it (using vision on past and future frames)
     """
-    def __init__(self, is_training, hparams, activation=tf.nn.tanh, scope=None):
+    def __init__(self, is_training, kernel_size, channels=512, num_layers=1,
+                 dropout_rate=0., activation=tf.nn.tanh, scope=None):
         """
         Args:
             is_training: Boolean, determines if the model is training or in inference to control dropout
             kernel_size: tuple or integer, The size of convolution kernels
             channels: integer, number of convolutional kernels
+            num_layers: integer, number of stacked layers
             activation: callable, postnet activation function for each convolutional layer
             scope: Postnet scope.
         """
         super(Postnet, self).__init__()
         self.is_training = is_training
 
-        self.kernel_size = hparams.postnet_kernel_size
-        self.channels = hparams.postnet_channels
+        self.kernel_size = kernel_size
+        self.channels = channels
         self.activation = activation
         self.scope = 'postnet_convolutions' if scope is None else scope
-        self.postnet_num_layers = hparams.postnet_num_layers
-        self.drop_rate = hparams.tacotron_dropout_rate
+        self.postnet_num_layers = num_layers
+        self.drop_rate = dropout_rate
 
     def __call__(self, inputs):
         with tf.variable_scope(self.scope):

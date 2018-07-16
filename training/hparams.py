@@ -15,8 +15,8 @@ hparams = tf.contrib.training.HParams(
     prefetch_buffer_size = 2,
 
 	#Hardware setup (TODO: multi-GPU parallel tacotron training)
-	use_all_gpus = False, #Whether to use all GPU resources. If True, total number of available gpus will override num_gpus.
-	num_gpus = 1, #Determines the number of gpus in use
+	distribute = False, #Whether to use all GPU resources. If True, total number of available gpus will override num_gpus.
+	num_gpus = 4, #Determines the number of gpus in use
 	###########################################################################################################################################
 
 	#Audio
@@ -66,7 +66,7 @@ hparams = tf.contrib.training.HParams(
     train_steps = 200000,
     eval_steps = 16,
     eval_throttle_secs = 300,
-	outputs_per_step = 5, #number of frames to generate at each decoding step (speeds up computation and allows for higher batch size)
+	outputs_per_step = 1, #number of frames to generate at each decoding step (speeds up computation and allows for higher batch size)
 	stop_at_any = True, #Determines whether the decoder should stop when predicting <stop> to any frame or to all of them
 
 	embedding_dim = 512, #dimension of embedding space
@@ -152,14 +152,18 @@ hparams = tf.contrib.training.HParams(
 	tacotron_final_learning_rate = 1e-5, #minimal learning rate
 
     tacotron_cyclic_learning_rate = True,
-    tacotron_max_learning_rate = 1e-2,
-    tacotron_min_learning_rate = 1e-3 ,
-    tacotron_cyclic_step_size = 1000,
+    tacotron_max_learning_rate = 1e-3,
+    tacotron_min_learning_rate = 1e-4 ,
+    tacotron_cyclic_step_size = 2000,
 
 	tacotron_adam_beta1 = 0.9, #AdamOptimizer beta1 parameter
 	tacotron_adam_beta2 = 0.999, #AdamOptimizer beta2 parameter
 	tacotron_adam_epsilon = 1e-6, #AdamOptimizer beta3 parameter
 
+    tacotron_curriculum_dropout_rate = True,
+    tacotron_curriculum_zoneout_rate = True,
+    tacotron_curriculum_dropout_gamma = 2e-4,
+    tacotron_curriculum_zoneout_gamma = 2e-4,
 	tacotron_zoneout_rate = 0.1, #zoneout rate for all LSTM cells in the network
 	tacotron_dropout_rate = 0.5, #dropout rate for all convolutional layers + prenet
 
