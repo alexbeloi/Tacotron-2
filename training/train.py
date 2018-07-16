@@ -34,10 +34,17 @@ def run_experiment(train_files, eval_files, hparams):
                                       throttle_secs=hparams.eval_throttle_secs,
                                       )
 
+    if hparams.distribute:
+        distribution = tf.contrib.distribute.MirroredStrategy(
+            num_gpus=hparams.num_gpus)
+    else:
+        distribution = None
+
     run_config = tf.estimator.RunConfig(
         model_dir=hparams.job_dir,
         save_summary_steps=10,
         log_step_count_steps=10,
+        train_distribute=distribution,
     )
 
     _estimator = tf.estimator.Estimator(model_fn=estimator.estimator_fn,
