@@ -68,6 +68,7 @@ def input_fn(glob,
         return dataset
 
 
+# [START serving-function]
 def example_serving_input_fn():
     """Build the serving inputs."""
     example_bytestrings = tf.placeholder(
@@ -83,7 +84,6 @@ def example_serving_input_fn():
     )
 
 
-# [START serving-function]
 def json_serving_input_fn():
     """Build the serving inputs."""
     receiver_inputs = {
