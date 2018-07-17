@@ -12,7 +12,7 @@ hparams = tf.contrib.training.HParams(
 	cleaners = 'english_cleaners',
 
     #Dataset
-    prefetch_buffer_size = 2,
+    prefetch_buffer_size = None, # Set to None to let tensorflow find optimal buffer size itself
 
 	#Hardware setup (TODO: multi-GPU parallel tacotron training)
 	distribute = False, #Whether to use all GPU resources. If True, total number of available gpus will override num_gpus.
@@ -153,8 +153,8 @@ hparams = tf.contrib.training.HParams(
 
     tacotron_cyclic_learning_rate = True,
     tacotron_max_learning_rate = 1e-3,
-    tacotron_min_learning_rate = 1e-4 ,
-    tacotron_cyclic_step_size = 2000,
+    tacotron_min_learning_rate = 1e-5 ,
+    tacotron_cyclic_step_size = 1000,
 
 	tacotron_adam_beta1 = 0.9, #AdamOptimizer beta1 parameter
 	tacotron_adam_beta2 = 0.999, #AdamOptimizer beta2 parameter
