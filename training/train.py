@@ -111,6 +111,7 @@ def parse_args():
     parser.add_argument(
         '--hparams',
         type=str,
+        default='',
         help='Comma separated list of "name=value" pairs.',
         required=False,
     )
