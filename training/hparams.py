@@ -137,7 +137,7 @@ hparams = tf.contrib.training.HParams(
 	tacotron_swap_with_cpu = False, #Whether to use cpu as support to gpu for decoder computation (Not recommended: may cause major slowdowns! Only use when critical!)
 
 	tacotron_batch_size = 48, #number of training samples on each training steps
-	tacotron_reg_weight = 1e-5, #regularization weight (for l2 regularization)
+	tacotron_reg_weight = 1e-6, #regularization weight (for l2 regularization)
 	tacotron_scale_regularization = False, #Whether to rescale regularization weight to adapt for outputs range (used when reg_weight is high and biasing the model)
 
 	tacotron_test_size = None, #% of data to keep as test data, if None, tacotron_test_batches must be not None
@@ -201,7 +201,7 @@ hparams = tf.contrib.training.HParams(
 	wavenet_ema_decay = 0.9999, #decay rate of exponential moving average
 
 	wavenet_dropout = 0.05, #drop rate of wavenet layers
-	train_with_GTA = False, #Whether to use GTA mels to train WaveNet instead of ground truth mels.
+	train_with_GTA = True, #Whether to use GTA mels to train WaveNet instead of ground truth mels.
 	###########################################################################################################################################
 
 	#Eval sentences (if no eval file was specified, these sentences are used for eval)
