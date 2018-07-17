@@ -34,15 +34,17 @@ def run_experiment(train_files, eval_files, warm_start_from, hparams):
                                         max_steps=hparams.train_steps
                                         )
 
-    exporter = tf.estimator.LatestExporter(
-        'tacotron',
-        feeder.SERVING_FUNCTIONS[hparams.export_format],
-        exports_to_keep=20,
-    )
+    exporters = [
+        exporter = tf.estimator.LatestExporter(
+            'tacotron_' + key,
+            serving_input_fn,
+            exports_to_keep=20,
+        ) for key, serving_input_fn in feeder.SERVING_FUNCTIONS.items()
+    ]
 
     eval_spec = tf.estimator.EvalSpec(eval_dataset,
                                       steps=hparams.eval_steps,
-                                      exporters=[exporter],
+                                      exporters=exporters
                                       name='tacotron-eval',
                                       throttle_secs=hparams.eval_throttle_secs,
                                       )

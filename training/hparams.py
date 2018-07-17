@@ -4,7 +4,6 @@ import numpy as np
 
 # Default hyperparameters
 hparams = tf.contrib.training.HParams(
-    export_format = 'JSON',
     train_files = [''],
     job_dir = 'job_dir',
 	# Comma-separated list of cleaners to run on text prior to training and eval. For non-English
