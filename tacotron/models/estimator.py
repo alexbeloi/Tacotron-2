@@ -39,7 +39,6 @@ def estimator_fn(features,
                  labels,
                  mode=None,
                  params=None,
-                 config=None,
                  ):
     hparams = params
     model = tacotron.Tacotron(hparams)
@@ -48,7 +47,7 @@ def estimator_fn(features,
     is_evaluating = mode == tf.estimator.ModeKeys.EVAL
 
     global_step = tf.train.get_or_create_global_step()
-    print(features)
+
     model.initialize(
         features['sequence_features.text'],
         features['context_features.text_length'],
@@ -59,6 +58,7 @@ def estimator_fn(features,
         is_training=is_training,
         is_evaluating=is_evaluating,
         )
+
     if is_training or is_evaluating:
         model.add_loss()
         if is_training:
