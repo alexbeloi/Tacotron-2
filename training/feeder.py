@@ -84,6 +84,33 @@ def example_serving_input_fn():
     )
 
 
+def json_serving_input_gta_fn():
+    """Build the serving inputs."""
+    receiver_inputs = {
+        'text': tf.placeholder(shape=[None, None], dtype=tf.int32,
+        name='inputs'),
+    }
+    alternative_receiver_inputs = {
+        'mel_targets': tf.placeholder(shape=[None, None], dtype=tf.float32,
+                                      name='mel_inputs'),
+        'stop_token': tf.placeholder(shape=[None, None], dtype=tf.int64,
+                                     name='stop_token_inputs'),
+    }
+
+    text = tf.cast(receiver_inputs['text'], tf.int64)
+    lengths = tf.map_fn(lambda t: tf.size(t, out_type=tf.int64), text,
+                        dtype=tf.int64)
+    mel_lengths = tf.map_fn(lambda t: tf.size(t, out_type=tf.int64),
+                            alternative_receiver_inputs['mel_targets'],
+                            dtype=tf.int64)
+    inputs = {
+        'context_features.text_length': lengths,
+        'sequence_features.text': text,
+    }
+
+    return tf.estimator.export.ServingInputReceiver(inputs, receiver_inputs)
+
+
 def json_serving_input_fn():
     """Build the serving inputs."""
     receiver_inputs = {
@@ -104,5 +131,6 @@ def json_serving_input_fn():
 
 SERVING_FUNCTIONS = {
     'JSON': json_serving_input_fn,
+    'JSON_GTA': json_serving_input_gta_fn,
     'EXAMPLE': example_serving_input_fn,
 }
