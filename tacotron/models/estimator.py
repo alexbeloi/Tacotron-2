@@ -22,6 +22,9 @@ def create_summaries(model, hparams, is_training=False, is_evaluating=True):
                 tf.summary.scalar(
                     prefix + 'teacher_forcing_ratio', model.ratio)
             tf.summary.scalar(prefix + 'learning_rate', model.learning_rate)
+            tf.summary.scalar(prefix + 'dropout_rate', model.dropout_rate)
+            tf.summary.scalar(prefix + 'zoneout_rate', model.zoneout_rate)
+
         alignments = model.alignments
         images = []
         for i in range(hparams.tacotron_batch_size):

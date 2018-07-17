@@ -58,7 +58,8 @@ class Tacotron():
                     hp.tacotron_curriculum_dropout_gamma,
                     global_step)
             else:
-                self.dropout_rate = hp.tacotron_dropout_rate
+                self.dropout_rate = tf.convert_to_tensor(
+                    hp.tacotron_dropout_rate)
 
             if hp.tacotron_curriculum_zoneout_rate:
                 assert global_step is not None
@@ -67,7 +68,8 @@ class Tacotron():
                     hp.tacotron_curriculum_zoneout_gamma,
                     global_step)
             else:
-                self.zoneout_rate = hp.tacotron_zoneout_rate
+                self.zoneout_rate = tf.convert_to_tensor(
+                    hp.tacotron_zoneout_rate)
 
             assert hp.tacotron_teacher_forcing_mode in ('constant', 'scheduled')
             if hp.tacotron_teacher_forcing_mode == 'scheduled' and is_training:
@@ -129,7 +131,16 @@ class Tacotron():
 
             #Define the helper for our decoder
             if is_training or is_evaluating or gta:
-                self.helper = TacoTrainingHelper(batch_size, mel_targets, stop_token_targets, hp, gta, is_evaluating, global_step)
+                if mel_targets is not None and stop_token_targets is not None:
+                    self.helper = TacoTrainingHelper(
+                        batch_size, mel_targets, stop_token_targets, hp, gta,
+                        is_evaluating, global_step)
+                else:
+                    if gta:
+                        log('Warning: gta set to True but mel_targets or '
+                            + 'mel_targets or stop_token_targets not provided'
+                            + ', falling back to natural inference')
+                    self.helper = TacoTestHelper(batch_size, hp)
             else:
                 self.helper = TacoTestHelper(batch_size, hp)
 
