@@ -122,6 +122,7 @@ if __name__ == '__main__':
     args = parse_args()
     hparams = hp.hparams
     hparams.parse(args.hparams)
+    hparams.set_hparam('job_dir', args.job_dir)
     if args.profile:
         utils.profile(args.profile_dir)(
             run_experiment)(args.train_files, args.eval_files,
