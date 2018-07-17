@@ -21,8 +21,7 @@ def _distribution_strategy(hparams):
     return distribution
 
 
-
-def run_experiment(train_files, eval_files, hparams):
+def run_experiment(train_files, eval_files, warm_start_from, hparams):
     train_dataset = lambda: feeder.input_fn(train_files,
                                             shuffle=True,
                                             )
@@ -57,9 +56,12 @@ def run_experiment(train_files, eval_files, hparams):
         train_distribute=distribution,
     )
 
-    _estimator = tf.estimator.Estimator(model_fn=estimator.estimator_fn,
-                                        params=hparams,
-                                        config=run_config)
+    _estimator = tf.estimator.Estimator(
+        model_fn=estimator.estimator_fn,
+        params=hparams,
+        config=run_config,
+        warm_start_from=warm_start_from,
+    )
     tf.estimator.train_and_evaluate(_estimator, train_spec, eval_spec)
 
 
@@ -86,6 +88,13 @@ def parse_args():
         required=True,
     )
     parser.add_argument(
+        '--warm-start-from',
+        type=str,
+        default=None,
+        help='GCS or local path to restore from for initialization',
+        required=False,
+    )
+    parser.add_argument(
         '--profile',
         type=bool,
         default=False,
@@ -100,10 +109,9 @@ def parse_args():
         required=False,
     )
     parser.add_argument(
-        '--learning-rate',
-        type=float,
-        default=None,
-        help='Override learning rate',
+        '--hparams',
+        type=str,
+        help='Comma separated list of "name=value" pairs.',
         required=False,
     )
 
@@ -112,13 +120,12 @@ def parse_args():
 
 if __name__ == '__main__':
     args = parse_args()
-    if args.job_dir:
-        hparams = hp.hparams.override_from_dict({'job_dir': args.job_dir})
-    if args.learning_rate:
-        hparams = hp.hparams.override_from_dict(
-            {'tacotron_initial_learning_rate': args.learning_rate})
+    hparams = hp.hparams
+    hparams.parse(args.hparams)
     if args.profile:
         utils.profile(args.profile_dir)(
-            run_experiment)(args.train_files, args.eval_files, hparams)
+            run_experiment)(args.train_files, args.eval_files,
+                            args.warm_start_from,  hparams)
     else:
-        run_experiment(args.train_files, args.eval_files, hparams)
+        run_experiment(args.train_files, args.eval_files,
+                       args.warm_start_from, hparams)
