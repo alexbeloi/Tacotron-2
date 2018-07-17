@@ -35,7 +35,7 @@ def run_experiment(train_files, eval_files, warm_start_from, hparams):
                                         )
 
     exporters = [
-        exporter = tf.estimator.LatestExporter(
+        estimator.LatestExporter(
             'tacotron_' + key,
             serving_input_fn,
             exports_to_keep=20,
